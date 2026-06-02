@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>유행 모아보기 ⚡ - 트렌드 탐색 & 아바타 메이커</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="trendsData.js"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- Top Bar Header -->
+    <header>
+      <div class="logo-section">
+        <h1>유행 모아보기</h1>
+        <span>Trend Spotlight</span>
+      </div>
+      <div class="header-status">
+        <div class="gem-badge-container">
+          <div class="gem-badge" onclick="navigateTo('avatar')">
+            <svg width="14" height="14" viewBox="0 0 24 24"><polygon points="12,2 22,8.5 12,22 2,8.5" /></svg>
+            <span class="gem-count-text">600</span>
+          </div>
+          <button class="gem-plus-btn" onclick="togglePlusModal(true)">+</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Viewport Scroll Area -->
+    <main class="app-content" id="app-viewport">
+      
+      <!-- SCREEN 1: HOME (홈 화면 - 멜론차트 스타일) -->
+      <section id="screen-home" class="screen active">
+        <!-- 2.5D Kitsch Card Deck Container -->
+        <div class="kitsch-deck-container" id="kitsch-deck">
+          <!-- Cards are dynamically rendered by app.js here -->
+        </div>
+      </section>
+
+      <!-- SCREEN 2: SEARCH (돋보기 / 배민 스타일) -->
+      <section id="screen-search" class="screen">
+        <!-- Baemin Style Search Bar: Clicking this triggers full chatbot overlay -->
+        <div class="search-input-box" onclick="openAIChatbotModal()">
+          <input type="text" readonly placeholder="트렌드 챌린지나 밈을 검색해 보세요" style="cursor: pointer;">
+          <button class="search-icon-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </button>
+        </div>
+
+        <!-- Recent Search Words -->
+        <div style="margin-bottom: 12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#fff; font-weight:700; margin-bottom:6px;">
+            <span>최근 검색어</span>
+            <span style="font-size:0.65rem; color:var(--text-muted); cursor:pointer;" onclick="clearRecentSearches()">전체 삭제</span>
+          </div>
+          <div id="search-recent-tags" style="display:flex; gap:6px; overflow-x:auto; padding-bottom:4px;">
+            <!-- Recent keywords with small X -->
+          </div>
+        </div>
+
+        <!-- Recommendation Badges (주문했던 메뉴 참고 스타일) -->
+        <div style="margin-bottom: 16px;">
+          <div style="font-size:0.75rem; color:#fff; font-weight:700; margin-bottom:6px;">추천 관심 트렌드 🏷️</div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px;">
+            <span class="recommend-pill" onclick="triggerKeywordSearch('두바이초콜릿')">두바이초콜릿</span>
+            <span class="recommend-pill" onclick="triggerKeywordSearch('요아정')">요아정</span>
+            <span class="recommend-pill" onclick="triggerKeywordSearch('최강록 이븐')">최강록 이븐</span>
+            <span class="recommend-pill" onclick="triggerKeywordSearch('위플래시')">위플래시</span>
+            <span class="recommend-pill" onclick="triggerKeywordSearch('고프코어')">고프코어</span>
+          </div>
+        </div>
+
+        <!-- Real-Time Top 10 Keywords (Popular trends style) -->
+        <div class="trending-keywords-box" style="margin-bottom: 12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; font-weight:700; color:var(--accent-cyan); margin-bottom:8px;">
+            <span>실시간 인기 검색어 (트렌드)</span>
+            <span style="font-size:0.65rem; color:var(--text-muted);">10분 단위 갱신</span>
+          </div>
+          <div class="keyword-grid" id="search-top-keywords">
+            <!-- 2-column layout (1-5, 6-10) with up/down arrows -->
+          </div>
+        </div>
+
+        <!-- Personalized feeds (Endless 3-column scrollable grid) -->
+        <div style="margin-top: 14px;">
+          <div style="font-size:0.78rem; font-weight:700; color:#fff; margin-bottom:8px;">실시간 추천 알고리즘 피드</div>
+          <!-- Outer container that can scroll vertically and has height constraint -->
+          <div style="max-height: 420px; overflow-y: auto; padding-right: 2px;" id="algo-scroll-viewport">
+            <div id="algorithm-cards-row" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+              <!-- Rendered vertical cards dynamically inside app.js -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 3: CREATION STUDIO (제작) -->
+      <section id="screen-creation" class="screen">
+        <div class="creation-full-container">
+          
+          <!-- FULL SCREEN CAMERA BACKROUND VIEWPORT -->
+          <div id="camera-stream-box" style="width:100%; height:100%; position:absolute; inset:0; z-index:1;"></div>
+
+          <!-- Video guide overlay -->
+          <div class="camera-overlay-guideline" id="camera-overlay-instructions" style="z-index:2; display:none; align-items:center; justify-content:center;">
+            <div class="camera-overlay-text">가이드를 로드하려면 상단 튜토리얼 메뉴를 클릭하세요</div>
+          </div>
+
+          <!-- Right Floating Sidebar Buttons -->
+          <div class="creation-right-bar" style="top: 80px;">
+            <button class="sidebar-icon-btn" onclick="toggleStudioPopover('music')">
+              <span style="font-size:1rem;">🎵</span>
+              <span style="font-size:0.5rem; margin-top:2px;">노래</span>
+            </button>
+            <button class="sidebar-icon-btn" onclick="toggleStudioPopover('gif')">
+              <span style="font-size:1rem;">🖼️</span>
+              <span style="font-size:0.5rem; margin-top:2px;">짤 추가</span>
+            </button>
+            <button class="sidebar-icon-btn" onclick="triggerStudioPhotoUpload()">
+              <span style="font-size:1rem;">📷</span>
+              <span style="font-size:0.5rem; margin-top:2px;">사진</span>
+            </button>
+            <button class="sidebar-icon-btn" onclick="toggleStudioFiltersList()">
+              <span style="font-size:1rem;">✨</span>
+              <span style="font-size:0.5rem; margin-top:2px;">필터</span>
+            </button>
+          </div>
+
+          <!-- Top Right Tutorial Toolbar Drawer -->
+          <div class="tutorial-banner" id="studio-tutorial-banner" style="position:absolute; top:12px; left:12px; right:12px; z-index:5; background:rgba(10,12,18,0.85); padding:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:0.7rem; font-weight:700; color:var(--accent-cyan);">우측 상단 튜토리얼 기능:</span>
+              <button onclick="toggleTutorial(true)" style="background:none; border:none; color:var(--accent-pink); font-size:0.65rem; cursor:pointer;">[가이드 안보기]</button>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="inner-pill" style="padding:3px 6px; font-size:0.6rem;" onclick="requestTutorialOption('숏폼')">🎬 숏폼</button>
+              <button class="inner-pill" style="padding:3px 6px; font-size:0.6rem;" onclick="requestTutorialOption('게시물')">📝 게시물</button>
+              <button class="inner-pill" style="padding:3px 6px; font-size:0.6rem;" onclick="requestTutorialOption('스토리')">📱 스토리</button>
+            </div>
+          </div>
+
+          <!-- Music Selector Popover -->
+          <div class="studio-popover" id="studio-popover-music" style="display:none; position:absolute; left:12px; right:12px; top:80px; background:rgba(10,12,18,0.95); border:2px solid var(--accent-cyan); border-radius:16px; padding:10px; z-index:20; max-height:220px; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:0.75rem; font-weight:700; color:var(--accent-cyan);">🎵 유행 노래 검색 & 추천</span>
+              <button onclick="closeStudioPopovers()" style="background:none; border:none; color:#ff2a85; font-size:0.7rem; cursor:pointer;">닫기</button>
+            </div>
+            <input type="text" class="studio-input" placeholder="유행하는 노래 제목 검색..." style="padding:6px; font-size:0.75rem; margin-bottom:8px;" oninput="filterStudioMusic(this.value)">
+            <div id="studio-music-list" style="display:flex; flex-direction:column; gap:6px;">
+              <!-- Recommended trending music loaded dynamically -->
+            </div>
+          </div>
+
+          <!-- GIF Selector Popover -->
+          <div class="studio-popover" id="studio-popover-gif" style="display:none; position:absolute; left:12px; right:12px; top:80px; background:rgba(10,12,18,0.95); border:2px solid var(--accent-purple); border-radius:16px; padding:10px; z-index:20; max-height:220px; overflow-y:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span style="font-size:0.75rem; font-weight:700; color:var(--accent-purple);">🖼️ 인기 짤방 갤러리</span>
+              <button onclick="closeStudioPopovers()" style="background:none; border:none; color:#ff2a85; font-size:0.7rem; cursor:pointer;">닫기</button>
+            </div>
+            <input type="text" class="studio-input" placeholder="원하는 짤방 키워드 검색..." style="padding:6px; font-size:0.75rem; margin-bottom:8px;" oninput="filterStudioGifs(this.value)">
+            <div id="studio-gif-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
+              <!-- Recommended popular GIFs loaded dynamically -->
+            </div>
+          </div>
+
+          <!-- User photo file selector element (Invisible) -->
+          <input type="file" id="studio-photo-file-input" accept="image/*" style="display:none;" onchange="handleStudioPhotoSelected(event)">
+
+          <!-- Live Filters Drawer (Horizontal list positioned right above the capture button) -->
+          <div id="studio-filters-drawer" style="display:none; position:absolute; bottom:245px; left:12px; right:12px; z-index:5; background:rgba(10,12,18,0.92); padding:6px; border-radius:10px; border:1.5px solid rgba(255,255,255,0.12);">
+            <div style="display:flex; justify-content:flex-end; margin-bottom:4px;">
+              <button onclick="closeStudioFiltersList()" style="background:none; border:none; color:#94a3b8; font-size:0.6rem; cursor:pointer;">닫기 ✕</button>
+            </div>
+            <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:2px;">
+              <span class="melon-pill" onclick="applyStudioFilter('normal')">필터 없음</span>
+              <span class="melon-pill" onclick="applyStudioFilter('vhs')">retro VHS 📼</span>
+              <span class="melon-pill" onclick="applyStudioFilter('neon')">cyber Neon ⚡</span>
+              <span class="melon-pill" onclick="applyStudioFilter('y2k')">Y2K sticker 💖</span>
+              <span class="melon-pill" onclick="applyStudioFilter('warm')">warm Cozy ☕</span>
+            </div>
+          </div>
+
+          <!-- Creation Settings and Record Drawer (Moved Drafts to the bottom) -->
+          <div class="creation-overlay-drawer">
+            <div class="record-row-center" style="margin-bottom: 6px;">
+              <button class="record-btn" id="studio-record-btn" onclick="toggleRecording()"></button>
+            </div>
+
+            <!-- Upload input and separate privacy toggles -->
+            <form class="studio-form" style="background:rgba(10,12,18,0.9); padding:8px; gap:6px; border-radius:12px;">
+              <input type="text" id="publish-title" class="studio-input" style="padding:5px; font-size:0.75rem;" placeholder="제목을 입력하세요">
+              
+              <div style="display:flex; justify-content:space-between; font-size:0.62rem; color:var(--text-secondary);">
+                <label><input type="checkbox" id="publish-private-likes"> 좋아요 비공개</label>
+                <label><input type="checkbox" id="publish-private-comments"> 댓글 비공개</label>
+                <label><input type="checkbox" id="publish-private-shares"> 공유 비공개</label>
+              </div>
+
+              <button type="submit" class="submit-btn" style="padding:5px; font-size:0.72rem;" onclick="handlePublishPost(event)">로컬 저장 및 인앱 공유</button>
+            </form>
+
+            <!-- Drafts placed below settings box inside the scroll layout -->
+            <div style="max-height:85px; overflow-y:auto; border-top: 1px solid var(--panel-border); padding-top: 6px; margin-top: 4px;">
+              <div style="font-size:0.65rem; color:var(--accent-cyan); font-weight:700; margin-bottom:4px;">📥 임시 저장 보관함</div>
+              <div id="creation-drafts-list"></div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- SCREEN 4: AVATAR (아바타 꾸미기) -->
+      <section id="screen-avatar" class="screen">
+        <div class="avatar-section">
+          <!-- Live SVG customizer canvas -->
+          <div class="avatar-viewer-box" id="avatar-display-canvas"></div>
+
+          <div class="avatar-custom-panel">
+            <div class="avatar-parts-tabs" id="avatar-shop-tabs">
+              <span class="part-tab active" data-cat="hair" onclick="setShopCategory('hair')">머리</span>
+              <span class="part-tab" data-cat="accessory" onclick="setShopCategory('accessory')">장신구</span>
+              <span class="part-tab" data-cat="headwear" onclick="setShopCategory('headwear')">머리장식</span>
+              <span class="part-tab" data-cat="back" onclick="setShopCategory('back')">등장식</span>
+              <span class="part-tab" data-cat="eyes" onclick="setShopCategory('eyes')">눈모양</span>
+              <span class="part-tab" data-cat="mouth" onclick="setShopCategory('mouth')">입모양</span>
+              <span class="part-tab" data-cat="top" onclick="setShopCategory('top')">상의</span>
+              <span class="part-tab" data-cat="bottom" onclick="setShopCategory('bottom')">하의</span>
+              <span class="part-tab" data-cat="hand" onclick="setShopCategory('hand')">손장식</span>
+              <span class="part-tab" data-cat="contacts" onclick="setShopCategory('contacts')">렌즈</span>
+              <span class="part-tab" data-cat="shoes" onclick="setShopCategory('shoes')">신발</span>
+              <span class="part-tab" data-cat="crown" onclick="setShopCategory('crown')">왕관</span>
+            </div>
+
+            <div class="avatar-items-grid" id="avatar-shop-grid" style="max-height: 220px;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCREEN 5: PROFILE (프로필 - 요소 재배치) -->
+      <section id="screen-profile" class="screen">
+        <div class="profile-header-card" style="padding: 14px 10px;">
+          <!-- 1. Profile Picture -->
+          <div class="profile-avatar-wrapper" style="margin-bottom:6px;">
+            <div class="profile-avatar-circle" id="profile-avatar-render" onclick="triggerCustomAvatarUpload()"></div>
+            <div class="avatar-edit-icon" onclick="triggerCustomAvatarUpload()">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            </div>
+          </div>
+
+          <!-- 2. Nickname -->
+          <div class="profile-name-row" style="margin-bottom:2px;">
+            <span class="profile-nickname" id="profile-display-name" style="font-size:1.05rem;">솜뭉치인형</span>
+            <button class="edit-nick-btn" onclick="showNicknameModal()">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>
+
+          <!-- 3. Friend Code -->
+          <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:4px;">친구코드: TRND-8894</div>
+
+          <!-- 4. Add Friend Button (Moved directly below Friend Code) -->
+          <button class="submit-btn" style="width:100%; margin-top:2px; font-size:0.75rem; padding:6px; background:rgba(255,255,255,0.06); border:1px solid var(--panel-border); color:#fff;" onclick="showFriendModal()">
+            ➕ 친구 추가하기
+          </button>
+
+          <!-- 5. Trend Sensitivity Pyramid (Moved below Add Friend) -->
+          <div class="pyramid-container" style="height:130px; margin: 6px 0;">
+            <svg class="pyramid-svg" id="profile-pyramid-svg"></svg>
+          </div>
+          <div class="sensitivity-score-card" id="profile-sensitivity-badge" style="font-size:0.72rem; padding:5px;">
+            유행 지표 민감도: <strong>Top 50%</strong> (초보 유행 인형 🧸)
+          </div>
+
+          <!-- Data Sources Citation Card -->
+          <div style="margin-top: 10px; background: rgba(0,0,0,0.25); border: 1px dashed rgba(255,255,255,0.08); padding: 8px; border-radius: 12px; width: 100%; text-align: left;">
+            <div style="font-size:0.68rem; font-weight:700; color:var(--accent-cyan); margin-bottom:4px;">📊 2026 실시간 유행 출처 정보</div>
+            <div style="font-size:0.58rem; color:var(--text-secondary); line-height:1.4;">
+              본 플랫폼의 유행 수집 순위 및 크리에이터(인플루언서 50인) 지표는 아래 소셜 플랫폼의 2026년 실시간 트렌드 피드를 정기적으로 수집하여 집계됩니다.
+              <div style="margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px;">
+                <a href="https://www.youtube.com" target="_blank" style="color:var(--accent-pink); text-decoration:none; background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px;">YouTube</a>
+                <a href="https://www.instagram.com" target="_blank" style="color:var(--accent-pink); text-decoration:none; background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px;">Instagram</a>
+                <a href="https://www.tiktok.com" target="_blank" style="color:var(--accent-pink); text-decoration:none; background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px;">TikTok</a>
+                <a href="https://x.com" target="_blank" style="color:var(--accent-pink); text-decoration:none; background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px;">X</a>
+                <a href="https://www.threads.net" target="_blank" style="color:var(--accent-pink); text-decoration:none; background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px;">Threads</a>
+                <a href="https://www.melon.com" target="_blank" style="color:var(--accent-pink); text-decoration:none; background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px;">Melon</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Content Sub-tabs -->
+        <div class="profile-tabs" style="margin-bottom: 6px; margin-top:10px;">
+          <div class="profile-tab-item active" data-tab="my" onclick="renderProfileTabContent('my')">올린 게시물</div>
+          <div class="profile-tab-item" data-tab="like" onclick="renderProfileTabContent('like')">좋아요</div>
+          <div class="profile-tab-item" data-tab="bookmark" onclick="renderProfileTabContent('bookmark')">즐겨찾기</div>
+        </div>
+
+        <div class="profile-tab-content" id="profile-tab-cards-container" style="max-height: 140px; overflow-y:auto;"></div>
+      </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+      <div class="nav-item active" data-screen="home" onclick="navigateTo('home')">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>홈</span>
+      </div>
+      <div class="nav-item" data-screen="search" onclick="navigateTo('search')">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>돋보기</span>
+      </div>
+      <div class="nav-item" data-screen="creation" onclick="navigateTo('creation')">
+        <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        <span>제작</span>
+      </div>
+      <div class="nav-item" data-screen="avatar" onclick="navigateTo('avatar')">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span>아바타</span>
+      </div>
+      <div class="nav-item" data-screen="profile" onclick="navigateTo('profile')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/></svg>
+        <span>프로필</span>
+      </div>
+    </nav>
+
+  </div>
+
+  <!-- INTERACTIVE FULL SCREEN AI CHATBOT MODAL -->
+  <div class="modal-overlay" id="ai-chatbot-modal" style="align-items:flex-end; padding:0;">
+    <div class="modal-card" style="max-width:100%; width:100%; height:85%; border-radius:24px 24px 0 0; display:flex; flex-direction:column; background:rgba(18,22,33,0.98);">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:8px; margin-bottom:10px;">
+        <h3 style="font-size:0.95rem; font-weight:800; color:var(--accent-cyan);">🤖 유행 탐색 AI 챗봇</h3>
+        <button style="background:none; border:none; color:var(--accent-pink); font-weight:700; cursor:pointer;" onclick="closeAIChatbotModal()">닫기</button>
+      </div>
+
+      <!-- Chat history area -->
+      <div class="chat-window" id="chat-modal-window-box" style="flex:1; height:auto; margin-bottom:10px;">
+        <div class="chat-bubble bot">
+          안녕하세요! 유행 상황 정보를 학습한 트렌드 탐색 챗봇입니다.<br>
+          "두바이 초콜릿 피스타치오 챌린지 알려줘" 혹은 "요아정 꿀조합 트렌드 뭐야?" 등 자유롭게 물어보세요!
+        </div>
+      </div>
+
+      <!-- Keyboard input form -->
+      <div style="display:flex; gap:6px;">
+        <input type="text" id="chat-modal-input-field" class="studio-input" style="flex:1;" placeholder="메시지를 입력하세요..." onkeypress="handleChatModalKey(event)">
+        <button class="submit-btn" style="padding:6px 12px; font-size:0.75rem;" onclick="submitChatModalQuery()">전송</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GEM CHARGE MODAL -->
+  <div class="modal-overlay" id="gem-plus-modal">
+    <div class="modal-card">
+      <h3 class="modal-title" style="color:var(--accent-pink);">💎 보석 획득 센터</h3>
+      <p style="font-size:0.75rem; color:var(--text-secondary); text-align:center; margin-bottom:16px;">출석체크 및 유행 제작 과제를 통해 무료 보석을 획득하고 트렌디한 아바타를 꾸며 보세요!</p>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button class="submit-btn" style="background:#22c55e; color:#fff;" onclick="claimAttendance()">📆 일일 출석체크 (+100 💎)</button>
+        <button class="submit-btn" style="background:var(--accent-pink); color:#fff;" onclick="watchAdSimulator()">🎬 짧은 필터 광고보기 (+50 💎)</button>
+        <button class="submit-btn" style="background:var(--accent-cyan); color:#030406;" onclick="navigateTo('creation'); togglePlusModal(false);">🎬 유행 숏폼 제작 미션 (+150 💎)</button>
+      </div>
+      <div class="modal-actions" style="margin-top:14px;">
+        <button class="modal-btn secondary" style="width:100%;" onclick="togglePlusModal(false)">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NICKNAME CHANGE MODAL -->
+  <div class="modal-overlay" id="nickname-modal">
+    <div class="modal-card">
+      <h3 class="modal-title">닉네임 변경</h3>
+      <input type="text" id="nickname-input-field" class="studio-input" placeholder="새로운 닉네임 입력">
+      <div id="nickname-cost-label" style="font-size:0.7rem; text-align:center; margin-top:6px;"></div>
+      <div class="modal-actions">
+        <button class="modal-btn secondary" onclick="closeNicknameModal()">취소</button>
+        <button class="modal-btn primary" onclick="submitNicknameChange()">적용</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FRIEND CODE MODAL -->
+  <div class="modal-overlay" id="friend-modal">
+    <div class="modal-card">
+      <h3 class="modal-title">친구 추가</h3>
+      <input type="text" id="friend-code-input" class="studio-input" placeholder="친구 코드 입력 (예: 유행추적기#2048)">
+      <div class="modal-actions">
+        <button class="modal-btn secondary" onclick="closeFriendModal()">닫기</button>
+        <button class="modal-btn primary" onclick="submitAddFriend()">요청</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
