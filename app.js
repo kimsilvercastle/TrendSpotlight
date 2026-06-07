@@ -121,57 +121,87 @@ function updateGemBadge() {
   badges.forEach(b => { b.textContent = state.gems; });
 }
 
-// SVG Generator (Super Cute Fluffy Plushie Doll Design - Extremely Soft, Chubby & Clean Rendering)
-function generateAvatarSVG(config) {
+// SVG Generator (Super Cute Fluffy Plushie Doll Design - Front and Back 2.5D Support & Seamless Joint Connections)
+function generateAvatarSVG(config, isBack = false) {
   const skinColor = "#ffebdb"; // Fluffy soft fabric tone
   const outlineColor = "#ff7da7"; // Main warm outline for cozy kitsch theme
   const stitchColor = "#fca5a5"; // Light pink stitching color
 
-  // 1. Cozy Fabric Eyes & Blush
-  let eyeSVG = `
-    <!-- Fluffy Round Button Eyes -->
-    <circle cx="66" cy="85" r="9" fill="#2d221c" stroke="#1b120c" stroke-width="1"/>
-    <circle cx="114" cy="85" r="9" fill="#2d221c" stroke="#1b120c" stroke-width="1"/>
-    <!-- Cute eye highlight sparkles -->
-    <circle cx="63" cy="81" r="3" fill="#ffffff" />
-    <circle cx="69" cy="88" r="1" fill="#ffffff" />
-    <circle cx="111" cy="81" r="3" fill="#ffffff" />
-    <circle cx="117" cy="88" r="1" fill="#ffffff" />
-    <!-- Heart-warming Cheek Blush -->
-    <ellipse cx="53" cy="95" rx="10" ry="6.5" fill="#ff7da7" opacity="0.65"/>
-    <ellipse cx="127" cy="95" rx="10" ry="6.5" fill="#ff7da7" opacity="0.65"/>
-  `;
+  // 1. Cozy Fabric Eyes & Blush (FRONT view only)
+  let eyeSVG = "";
+  let mouthSVG = "";
+  let accessoriesSVG = "";
 
-  if (config.eyes === "Sparkling") {
+  if (!isBack) {
     eyeSVG = `
-      <circle cx="66" cy="85" r="9.5" fill="#2d221c" />
-      <polygon points="66,79 68,83 72,83 69,85 70,89 66,87 62,89 63,85 60,83 64,83" fill="#fff"/>
-      <circle cx="114" cy="85" r="9.5" fill="#2d221c" />
-      <polygon points="114,79 116,83 120,83 117,85 118,89 114,87 110,89 111,85 108,83 112,83" fill="#fff"/>
-      <ellipse cx="53" cy="95" rx="10" ry="6.5" fill="#ff7da7" opacity="0.65"/>
-      <ellipse cx="127" cy="95" rx="10" ry="6.5" fill="#ff7da7" opacity="0.65"/>
-    `;
-  } else if (config.eyes === "Blinking") {
-    eyeSVG = `
-      <path d="M58,85 Q66,77 74,85" fill="none" stroke="#2d221c" stroke-width="4" stroke-linecap="round" />
-      <circle cx="114" cy="85" r="9" fill="#2d221c" />
+      <!-- Fluffy Round Button Eyes -->
+      <circle cx="66" cy="85" r="9" fill="#2d221c" stroke="#1b120c" stroke-width="1"/>
+      <circle cx="114" cy="85" r="9" fill="#2d221c" stroke="#1b120c" stroke-width="1"/>
+      <!-- Cute eye highlight sparkles -->
+      <circle cx="63" cy="81" r="3" fill="#ffffff" />
+      <circle cx="69" cy="88" r="1" fill="#ffffff" />
       <circle cx="111" cy="81" r="3" fill="#ffffff" />
+      <circle cx="117" cy="88" r="1" fill="#ffffff" />
+      <!-- Heart-warming Cheek Blush -->
       <ellipse cx="53" cy="95" rx="10" ry="6.5" fill="#ff7da7" opacity="0.65"/>
       <ellipse cx="127" cy="95" rx="10" ry="6.5" fill="#ff7da7" opacity="0.65"/>
     `;
-  } else if (config.eyes === "Cat Eyes") {
-    eyeSVG = `
-      <ellipse cx="66" cy="85" rx="10" ry="7.5" fill="#b624ff" stroke="#fff" stroke-width="1.2"/>
-      <ellipse cx="114" cy="85" rx="10" ry="7.5" fill="#b624ff" stroke="#fff" stroke-width="1.2"/>
-      <ellipse cx="66" cy="85" rx="2.5" ry="6.5" fill="#000"/>
-      <ellipse cx="114" cy="85" rx="2.5" ry="6.5" fill="#000"/>
-      <ellipse cx="53" cy="95" rx="10" ry="6.5" fill="#ff7da7" opacity="0.65"/>
-      <ellipse cx="127" cy="95" rx="10" ry="6.5" fill="#ff7da7" opacity="0.65"/>
-    `;
+
+    if (config.eyes === "Sparkling") {
+      eyeSVG = `
+        <circle cx="66" cy="85" r="9.5" fill="#2d221c" />
+        <polygon points="66,79 68,83 72,83 69,85 70,89 66,87 62,89 63,85 60,83 64,83" fill="#fff"/>
+        <circle cx="114" cy="85" r="9.5" fill="#2d221c" />
+        <polygon points="114,79 116,83 120,83 117,85 118,89 114,87 110,89 111,85 108,83 112,83" fill="#fff"/>
+        <ellipse cx="53" cy="95" rx="10" ry="6.5" fill="#ff7da7" opacity="0.65"/>
+        <ellipse cx="127" cy="95" rx="10" ry="6.5" fill="#ff7da7" opacity="0.65"/>
+      `;
+    } else if (config.eyes === "Blinking") {
+      eyeSVG = `
+        <path d="M58,85 Q66,77 74,85" fill="none" stroke="#2d221c" stroke-width="4" stroke-linecap="round" />
+        <circle cx="114" cy="85" r="9" fill="#2d221c" />
+        <circle cx="111" cy="81" r="3" fill="#ffffff" />
+        <ellipse cx="53" cy="95" rx="10" ry="6.5" fill="#ff7da7" opacity="0.65"/>
+        <ellipse cx="127" cy="95" rx="10" ry="6.5" fill="#ff7da7" opacity="0.65"/>
+      `;
+    } else if (config.eyes === "Cat Eyes") {
+      eyeSVG = `
+        <ellipse cx="66" cy="85" rx="10" ry="7.5" fill="#b624ff" stroke="#fff" stroke-width="1.2"/>
+        <ellipse cx="114" cy="85" rx="10" ry="7.5" fill="#b624ff" stroke="#fff" stroke-width="1.2"/>
+        <ellipse cx="66" cy="85" rx="2.5" ry="6.5" fill="#000"/>
+        <ellipse cx="114" cy="85" rx="2.5" ry="6.5" fill="#000"/>
+        <ellipse cx="53" cy="95" rx="10" ry="6.5" fill="#ff7da7" opacity="0.65"/>
+        <ellipse cx="127" cy="95" rx="10" ry="6.5" fill="#ff7da7" opacity="0.65"/>
+      `;
+    }
+
+    mouthSVG = `<path d="M80,103 Q90,111 100,103" fill="none" stroke="#2d221c" stroke-width="3.5" stroke-linecap="round"/>`;
+    if (config.mouth === "Surprised") {
+      mouthSVG = `<circle cx="90" cy="107" r="5.5" fill="#c94a4a" stroke="#2d221c" stroke-width="2"/>`;
+    } else if (config.mouth === "Cool Smirk") {
+      mouthSVG = `<path d="M82,106 Q95,100 98,109" fill="none" stroke="#2d221c" stroke-width="3" stroke-linecap="round"/>`;
+    } else if (config.mouth === "Whistling") {
+      mouthSVG = `<circle cx="90" cy="106" r="3.5" fill="none" stroke="#2d221c" stroke-width="3"/>`;
+    }
+
+    if (config.accessory === "Cool Sunglasses") {
+      accessoriesSVG = `
+        <polygon points="45,78 78,78 74,94 50,94" fill="#111" opacity="0.9"/>
+        <polygon points="102,78 135,78 131,94 107,94" fill="#111" opacity="0.9"/>
+        <line x1="78" y1="83" x2="102" y2="83" stroke="#fff" stroke-width="2.5"/>
+      `;
+    } else if (config.accessory === "Cyber Visor") {
+      accessoriesSVG = `<polygon points="36,75 144,73 138,96 42,98" fill="rgba(182, 36, 255, 0.75)" stroke="#ff2a85" stroke-width="2"/>`;
+    } else if (config.accessory === "Cute Blush") {
+      accessoriesSVG = `
+        <ellipse cx="53" cy="95" rx="13" ry="8" fill="#ff4d94" opacity="0.4"/>
+        <ellipse cx="127" cy="95" rx="13" ry="8" fill="#ff4d94" opacity="0.4"/>
+      `;
+    }
   }
 
   let contactsOverlay = "";
-  if (config.contacts && config.contacts !== "Standard Gray") {
+  if (!isBack && config.contacts && config.contacts !== "Standard Gray") {
     let color = "transparent";
     if (config.contacts === "Blue Ring") color = "rgba(0, 242, 254, 0.45)";
     if (config.contacts === "Purple Glow") color = "rgba(182, 36, 255, 0.45)";
@@ -182,61 +212,59 @@ function generateAvatarSVG(config) {
     `;
   }
 
-  // Soft smiling stitched mouth
-  let mouthSVG = `<path d="M80,103 Q90,111 100,103" fill="none" stroke="#2d221c" stroke-width="3.5" stroke-linecap="round"/>`;
-  if (config.mouth === "Surprised") {
-    mouthSVG = `<circle cx="90" cy="107" r="5.5" fill="#c94a4a" stroke="#2d221c" stroke-width="2"/>`;
-  } else if (config.mouth === "Cool Smirk") {
-    mouthSVG = `<path d="M82,106 Q95,100 98,109" fill="none" stroke="#2d221c" stroke-width="3" stroke-linecap="round"/>`;
-  } else if (config.mouth === "Whistling") {
-    mouthSVG = `<circle cx="90" cy="106" r="3.5" fill="none" stroke="#2d221c" stroke-width="3"/>`;
-  }
-
-  let accessoriesSVG = "";
-  if (config.accessory === "Cool Sunglasses") {
-    accessoriesSVG = `
-      <polygon points="45,78 78,78 74,94 50,94" fill="#111" opacity="0.9"/>
-      <polygon points="102,78 135,78 131,94 107,94" fill="#111" opacity="0.9"/>
-      <line x1="78" y1="83" x2="102" y2="83" stroke="#fff" stroke-width="2.5"/>
-    `;
-  } else if (config.accessory === "Cyber Visor") {
-    accessoriesSVG = `<polygon points="36,75 144,73 138,96 42,98" fill="rgba(182, 36, 255, 0.75)" stroke="#ff2a85" stroke-width="2"/>`;
-  } else if (config.accessory === "Cute Blush") {
-    accessoriesSVG = `
-      <ellipse cx="53" cy="95" rx="13" ry="8" fill="#ff4d94" opacity="0.4"/>
-      <ellipse cx="127" cy="95" rx="13" ry="8" fill="#ff4d94" opacity="0.4"/>
-    `;
-  }
-
-  // 2. Hair Styling (Rounded, soft shapes)
+  // 2. Hair Styling (Rounded, soft shapes - Front vs Back toggle)
   let hairSVG = "";
   if (config.hair !== "None") {
     switch(config.hair) {
       case "Long Blonde":
-        hairSVG = `
-          <!-- Fluffy long back hair -->
-          <path d="M42,65 C25,120 30,170 30,205 L48,205 C48,160 58,100 58,75 Z" fill="#ffd54f" stroke="${outlineColor}" stroke-width="1.5"/>
-          <path d="M138,65 C155,120 150,170 150,205 L132,205 C132,160 122,100 122,75 Z" fill="#ffd54f" stroke="${outlineColor}" stroke-width="1.5"/>
-          <!-- Fluffy front hair bangs -->
-          <path d="M43,55 Q90,20 137,55 C142,75 130,85 125,70 Q90,56 55,70 C50,85 38,75 43,55 Z" fill="#ffd54f" stroke="${outlineColor}" stroke-width="1.5"/>
-        `;
+        if (isBack) {
+          // Long back hair fully draping
+          hairSVG = `
+            <path d="M42,65 C25,120 30,170 30,205 L150,205 C150,170 155,120 138,65 C122,50 58,50 42,65 Z" fill="#ffd54f" stroke="${outlineColor}" stroke-width="1.5"/>
+            <!-- Hair seam stitching -->
+            <path d="M90,55 L90,195" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,3" />
+          `;
+        } else {
+          hairSVG = `
+            <path d="M42,65 C25,120 30,170 30,205 L48,205 C48,160 58,100 58,75 Z" fill="#ffd54f" stroke="${outlineColor}" stroke-width="1.5"/>
+            <path d="M138,65 C155,120 150,170 150,205 L132,205 C132,160 122,100 122,75 Z" fill="#ffd54f" stroke="${outlineColor}" stroke-width="1.5"/>
+            <path d="M43,55 Q90,20 137,55 C142,75 130,85 125,70 Q90,56 55,70 C50,85 38,75 43,55 Z" fill="#ffd54f" stroke="${outlineColor}" stroke-width="1.5"/>
+          `;
+        }
         break;
       case "Curly Brown":
-        hairSVG = `
-          <!-- Fluffy curly clouds -->
-          <path d="M40,55 C30,40 50,25 65,35 C75,20 95,20 105,35 C120,25 140,40 130,55 C145,70 135,95 120,85 C90,70 60,70 50,85 C35,95 25,70 40,55 Z" fill="#8d6e63" stroke="${outlineColor}" stroke-width="1.5"/>
-        `;
+        if (isBack) {
+          hairSVG = `
+            <path d="M40,55 C30,40 50,25 65,35 C75,20 95,20 105,35 C120,25 140,40 130,55 C145,70 135,95 120,85 C90,70 60,70 50,85 C35,95 25,70 40,55 Z" fill="#8d6e63" stroke="${outlineColor}" stroke-width="1.5"/>
+            <path d="M44,60 C44,60 55,80 90,80 C125,80 136,60 136,60 L136,115 L44,115 Z" fill="#8d6e63" stroke="${outlineColor}" stroke-width="1.5"/>
+          `;
+        } else {
+          hairSVG = `
+            <path d="M40,55 C30,40 50,25 65,35 C75,20 95,20 105,35 C120,25 140,40 130,55 C145,70 135,95 120,85 C90,70 60,70 50,85 C35,95 25,70 40,55 Z" fill="#8d6e63" stroke="${outlineColor}" stroke-width="1.5"/>
+          `;
+        }
         break;
       case "Hip Pink":
-        hairSVG = `
-          <!-- Fluffy twin buns -->
-          <circle cx="36" cy="46" r="16" fill="#ff4081" stroke="${outlineColor}" stroke-width="1.5" />
-          <circle cx="144" cy="46" r="16" fill="#ff4081" stroke="${outlineColor}" stroke-width="1.5" />
-          <path d="M43,52 Q90,18 137,52 L141,88 L127,92 L123,68 Q90,62 57,68 L53,92 L39,88 Z" fill="#ff4081" stroke="${outlineColor}" stroke-width="1.5"/>
-        `;
+        if (isBack) {
+          hairSVG = `
+            <circle cx="36" cy="46" r="16" fill="#ff4081" stroke="${outlineColor}" stroke-width="1.5" />
+            <circle cx="144" cy="46" r="16" fill="#ff4081" stroke="${outlineColor}" stroke-width="1.5" />
+            <path d="M43,52 Q90,18 137,52 L141,88 C141,88 132,115 90,115 C48,115 39,88 39,88 Z" fill="#ff4081" stroke="${outlineColor}" stroke-width="1.5"/>
+          `;
+        } else {
+          hairSVG = `
+            <circle cx="36" cy="46" r="16" fill="#ff4081" stroke="${outlineColor}" stroke-width="1.5" />
+            <circle cx="144" cy="46" r="16" fill="#ff4081" stroke="${outlineColor}" stroke-width="1.5" />
+            <path d="M43,52 Q90,18 137,52 L141,88 L127,92 L123,68 Q90,62 57,68 L53,92 L39,88 Z" fill="#ff4081" stroke="${outlineColor}" stroke-width="1.5"/>
+          `;
+        }
         break;
       default: // Short Black
-        hairSVG = `<path d="M44,55 Q90,22 136,55 C141,75 128,78 124,70 Q90,52 56,70 C52,78 39,75 44,55 Z" fill="#37474f" stroke="${outlineColor}" stroke-width="1.5"/>`;
+        if (isBack) {
+          hairSVG = `<path d="M44,55 Q90,22 136,55 C142,75 136,115 136,115 L44,115 C44,115 38,75 44,55 Z" fill="#37474f" stroke="${outlineColor}" stroke-width="1.5"/>`;
+        } else {
+          hairSVG = `<path d="M44,55 Q90,22 136,55 C141,75 128,78 124,70 Q90,52 56,70 C52,78 39,75 44,55 Z" fill="#37474f" stroke="${outlineColor}" stroke-width="1.5"/>`;
+        }
     }
   }
 
@@ -246,15 +274,15 @@ function generateAvatarSVG(config) {
     if(config.top === "Hoodie Grey") {
       topSVG = `
         <path d="M55,134 C55,134 50,185 60,192 C70,196 110,196 120,192 C130,185 125,134 125,134 Z" fill="#90a4ae" stroke="${outlineColor}" stroke-width="1.5"/>
-        <!-- Soft hood collar -->
         <ellipse cx="90" cy="133" rx="22" ry="7" fill="#78909c" stroke="${outlineColor}" stroke-width="1"/>
       `;
     } else if(config.top === "Leather Jacket") {
       topSVG = `
         <path d="M55,134 C55,134 50,185 60,192 C70,196 110,196 120,192 C130,185 125,134 125,134 Z" fill="#37474f" stroke="${outlineColor}" stroke-width="1.5"/>
-        <!-- Golden buttons -->
-        <circle cx="82" cy="155" r="2.5" fill="#ffd54f"/>
-        <circle cx="82" cy="170" r="2.5" fill="#ffd54f"/>
+        ${!isBack ? `
+          <circle cx="82" cy="155" r="2.5" fill="#ffd54f"/>
+          <circle cx="82" cy="170" r="2.5" fill="#ffd54f"/>
+        ` : ''}
       `;
     } else if(config.top === "Crop Top Neon") {
       topSVG = `
@@ -267,7 +295,6 @@ function generateAvatarSVG(config) {
   if (config.bottom && config.bottom !== "None") {
     if(config.bottom === "Cargo Pants Black") {
       bottomSVG = `
-        <!-- Fluffy rounded legs pants coverage -->
         <path d="M54,185 C54,185 45,232 62,234 H84 L88,195 L92,195 L96,234 H118 C135,232 126,185 126,185 Z" fill="#263238" stroke="${outlineColor}" stroke-width="1.5"/>
       `;
     } else if(config.bottom === "Denim Skirt") {
@@ -297,7 +324,7 @@ function generateAvatarSVG(config) {
   }
 
   let handSVG = "";
-  if (config.hand && config.hand !== "None") {
+  if (!isBack && config.hand && config.hand !== "None") {
     if(config.hand === "V Sign Sparkle") {
       handSVG = `
         <!-- Cute round paw making V shape -->
@@ -372,6 +399,32 @@ function generateAvatarSVG(config) {
     }
   }
 
+  // Paws and feet structures
+  const armLeft = `
+    <g id="arm-left">
+      <path d="M54,136 Q32,152 48,168 Q64,152 58,136" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2" />
+      <path d="M54,136 Q32,152 48,168" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,2" />
+    </g>
+  `;
+  const armRight = `
+    <g id="arm-right">
+      <path d="M126,136 Q148,152 132,168 Q116,152 122,136" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2" />
+      <path d="M126,136 Q148,152 132,168" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,2" />
+    </g>
+  `;
+  const legLeft = `
+    <g id="leg-left">
+      <path d="M58,188 Q44,228 66,236 Q88,228 78,188" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2" />
+      <path d="M58,188 Q44,228 66,236" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,3" />
+    </g>
+  `;
+  const legRight = `
+    <g id="leg-right">
+      <path d="M122,188 Q136,228 114,236 Q92,228 102,188" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2" />
+      <path d="M122,188 Q136,228 114,236" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,3" />
+    </g>
+  `;
+
   return `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 260">
       <defs>
@@ -386,64 +439,44 @@ function generateAvatarSVG(config) {
         </radialGradient>
       </defs>
       
-      <!-- Back Item -->
-      ${backSVG}
+      <!-- 1. BACK DECORATIONS (If FRONT, render behind the character) -->
+      ${!isBack ? backSVG : ''}
 
-      <!-- Ears (Chubby Fluffy Bear Ears with Stitches) -->
+      <!-- 2. COZY BEAR EARS -->
       <circle cx="45" cy="85" r="14" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2"/>
       <circle cx="45" cy="85" r="8" fill="#ffccd5" />
-      <!-- Left Ear Stitch Line -->
       <circle cx="45" cy="85" r="11" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,3" />
 
       <circle cx="135" cy="85" r="14" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2"/>
       <circle cx="135" cy="85" r="8" fill="#ffccd5" />
-      <!-- Right Ear Stitch Line -->
       <circle cx="135" cy="85" r="11" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,3" />
 
-      <!-- Left Hand/Arm (Chubby Fluffy Paw) -->
-      <g id="arm-left">
-        <path d="M54,136 Q32,152 48,168 Q64,152 58,136" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2" />
-        <path d="M54,136 Q32,152 48,168" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,2" />
-      </g>
+      <!-- 3. LIMBS (Rendered BEHIND torso for completely natural, clean joint overlap) -->
+      ${armLeft}
+      ${armRight}
+      ${legLeft}
+      ${legRight}
 
-      <!-- Right Hand/Arm (Chubby Fluffy Paw) -->
-      <g id="arm-right">
-        <path d="M126,136 Q148,152 132,168 Q116,152 122,136" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2" />
-        <path d="M126,136 Q148,152 132,168" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,2" />
-      </g>
-
-      <!-- Torso (Chubby Fluffy Soft Pear Shape) -->
+      <!-- 4. TORSO (Seamlessly sits ON TOP of arm/leg connections) -->
       <path d="M58,134 Q90,126 122,134 Q132,185 90,195 Q48,185 58,134 Z" fill="url(#grad-plush-body)" stroke="${outlineColor}" stroke-width="2" />
-      <!-- Center Stitch Line for Plushie Belly -->
-      <line x1="90" y1="134" x2="90" y2="193" stroke="${stitchColor}" stroke-width="2" stroke-dasharray="4,3" />
+      ${!isBack ? `<line x1="90" y1="134" x2="90" y2="193" stroke="${stitchColor}" stroke-width="2" stroke-dasharray="4,3" />` : ''}
 
-      <!-- Head (Chubby Fluffy Cheeks & Smooth Render) -->
+      <!-- 5. CHUBBY PLUSH HEAD -->
       <circle cx="90" cy="92" r="44" fill="url(#grad-plush-head)" stroke="${outlineColor}" stroke-width="2" />
-      <!-- Outer Face Soft Stitch Line -->
       <circle cx="90" cy="92" r="39" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="4,4" />
       
-      <!-- Face details -->
-      ${eyeSVG}
-      ${contactsOverlay}
-      ${mouthSVG}
+      <!-- 6. FACE FEATURES (Only if FRONT) -->
+      ${!isBack ? `
+        ${eyeSVG}
+        ${contactsOverlay}
+        ${mouthSVG}
+        <!-- Cute Heart Nose -->
+        <path d="M86,96 Q90,92 94,96 Q90,102 86,96 Z" fill="#e91e63" stroke="#2d221c" stroke-width="1"/>
+      ` : ''}
 
-      <!-- Cute Plush Nose (Rounded Heart Shape) -->
-      <path d="M86,96 Q90,92 94,96 Q90,102 86,96 Z" fill="#e91e63" stroke="#2d221c" stroke-width="1"/>
-
-      <!-- Hair Layer (Front) -->
+      <!-- 7. HAIR / CLOTHES / ACCESSORIES -->
       ${hairSVG}
 
-      <!-- Left Leg (Chubby Fluffy Rounded Foot) -->
-      <g id="leg-left">
-        <path d="M58,188 Q44,228 66,236 Q88,228 78,188" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2" />
-        <path d="M58,188 Q44,228 66,236" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,3" />
-      </g>
-
-      <!-- Right Leg (Chubby Fluffy Rounded Foot) -->
-      <g id="leg-right">
-        <path d="M122,188 Q136,228 114,236 Q92,228 102,188" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2" />
-        <path d="M122,188 Q136,228 114,236" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,3" />
-      </g>
 
       <!-- Clothing Layers & Accessories Overlays -->
       ${bottomSVG}
@@ -472,7 +505,23 @@ function updateAvatarDisplays() {
 }
 
 function updateAvatarRotation() {
-  const svg = document.querySelector("#avatar-display-canvas svg");
+  const svgContainer = document.getElementById("avatar-display-canvas");
+  if (!svgContainer) return;
+
+  // Normalize rotation angle to 0 - 360 range
+  let normalizedAngle = Math.abs(avatarRotationY) % 360;
+  
+  // Back view is active when rotated between 90 and 270 degrees
+  let isBack = (normalizedAngle > 90 && normalizedAngle < 270);
+  
+  // If the view state changed, we redraw the SVG to render front/back view
+  if (svgContainer.dataset.isBackRendered !== String(isBack)) {
+    svgContainer.dataset.isBackRendered = String(isBack);
+    svgContainer.innerHTML = generateAvatarSVG(state.avatarConfig, isBack);
+    setupAvatar3DRotationCue(svgContainer);
+  }
+
+  const svg = svgContainer.querySelector("svg");
   if (svg) {
     svg.style.transform = `perspective(600px) rotateY(${avatarRotationY}deg)`;
   }
