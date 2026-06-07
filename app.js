@@ -1047,20 +1047,32 @@ async function startCameraSimulator() {
   const container = document.getElementById("camera-stream-box");
   if (!container) return;
 
-  if (state.cameraPermGranted) {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     loadMockWebcam(container);
     return;
   }
 
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    let stream;
+    try {
+      // Prefer front camera on mobile devices
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+    } catch (e) {
+      stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    }
+    
     state.cameraPermGranted = true;
     saveState();
     
     container.innerHTML = `<video id="live-video-player" style="width:100%; height:100%; object-fit:cover; position:absolute; inset:0;" autoplay playsinline muted></video>`;
     const player = document.getElementById("live-video-player");
     player.srcObject = stream;
-    player.play();
+    
+    player.setAttribute('autoplay', '');
+    player.setAttribute('muted', '');
+    player.setAttribute('playsinline', '');
+    
+    player.play().catch(e => console.warn("Video play error:", e));
   } catch (err) {
     loadMockWebcam(container);
   }
@@ -1446,6 +1458,7 @@ function applyStudioFilter(filterType) {
 
 
 let recordingActive = false;
+let recordTimer = null;
 function toggleRecording() {
   const btn = document.getElementById("studio-record-btn");
   if (!btn) return;
@@ -1455,11 +1468,11 @@ function toggleRecording() {
     btn.classList.add("recording");
     showToast("가이드에 맞춰 녹화를 시작합니다! 🎥");
     
-    this.recordTimer = setTimeout(() => {
+    recordTimer = setTimeout(() => {
       if (recordingActive) toggleRecording();
     }, 5000);
   } else {
-    clearTimeout(this.recordTimer);
+    clearTimeout(recordTimer);
     btn.classList.remove("recording");
     
     const draftId = "draft-" + Date.now();
