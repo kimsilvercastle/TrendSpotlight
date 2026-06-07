@@ -749,8 +749,8 @@ header {
 
 .avatar-viewer-box {
   width: 100%;
-  height: 240px;
-  background: radial-gradient(circle, rgba(79, 172, 254, 0.12) 0%, rgba(3, 4, 6, 0.4) 80%);
+  height: 280px;
+  background: radial-gradient(circle, rgba(79, 172, 254, 0.15) 0%, rgba(3, 4, 6, 0.4) 80%);
   border: 1px solid var(--panel-border);
   border-radius: 20px;
   display: flex;
@@ -758,11 +758,15 @@ header {
   align-items: center;
   position: relative;
   overflow: hidden;
+  cursor: grab;
+  user-select: none;
 }
 
 .avatar-viewer-box svg {
-  width: 160px;
-  height: 160px;
+  width: 220px;
+  height: 220px;
+  transition: transform 0.1s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transform-style: preserve-3d;
 }
 
 .avatar-custom-panel {
@@ -800,12 +804,21 @@ header {
 }
 
 .avatar-items-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
   gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+.avatar-items-grid::-webkit-scrollbar {
+  height: 5px;
+}
+.avatar-items-grid::-webkit-scrollbar-thumb {
+  background: var(--panel-border);
+  border-radius: 3px;
 }
 
 .avatar-item-card {
+  flex: 0 0 84px;
   background: rgba(0,0,0,0.2);
   border: 1px solid var(--panel-border);
   border-radius: 12px;

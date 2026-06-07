@@ -458,12 +458,84 @@ function generateAvatarSVG(config) {
 }
 
 // Update components visual
+let avatarRotationY = 0;
+
 function updateAvatarDisplays() {
   const container = document.getElementById("avatar-display-canvas");
-  if (container) container.innerHTML = generateAvatarSVG(state.avatarConfig);
+  if (container) {
+    container.innerHTML = generateAvatarSVG(state.avatarConfig);
+    setupAvatar3DRotationCue(container);
+    updateAvatarRotation();
+  }
   const profileContainer = document.getElementById("profile-avatar-render");
   if (profileContainer) profileContainer.innerHTML = generateAvatarSVG(state.avatarConfig);
 }
+
+function updateAvatarRotation() {
+  const svg = document.querySelector("#avatar-display-canvas svg");
+  if (svg) {
+    svg.style.transform = `perspective(600px) rotateY(${avatarRotationY}deg)`;
+  }
+}
+
+function setupAvatar3DRotationCue(canvas) {
+  if (!canvas.querySelector(".rotation-cue")) {
+    const cue = document.createElement("div");
+    cue.className = "rotation-cue";
+    cue.style.cssText = "position:absolute; bottom:10px; right:12px; font-size:0.6rem; color:rgba(255,255,255,0.5); pointer-events:none; background:rgba(0,0,0,0.4); padding:3px 6px; border-radius:6px; display:flex; align-items:center; gap:3px;";
+    cue.innerHTML = "🔄 드래그하여 회전";
+    canvas.appendChild(cue);
+  }
+}
+
+function setupAvatar3DRotation() {
+  const canvas = document.getElementById("avatar-display-canvas");
+  if (!canvas) return;
+
+  let isDragging = false;
+  let previousX = 0;
+
+  // Clean up any old listeners by replacing the nodes or just safely appending new ones once
+  if (canvas.dataset.rotationInitialized) return;
+  canvas.dataset.rotationInitialized = "true";
+
+  canvas.addEventListener("mousedown", (e) => {
+    isDragging = true;
+    previousX = e.clientX;
+    canvas.style.cursor = "grabbing";
+  });
+
+  canvas.addEventListener("touchstart", (e) => {
+    isDragging = true;
+    previousX = e.touches[0].clientX;
+  }, { passive: true });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+    const deltaX = e.clientX - previousX;
+    previousX = e.clientX;
+    avatarRotationY += deltaX * 0.9;
+    updateAvatarRotation();
+  });
+
+  document.addEventListener("touchmove", (e) => {
+    if (!isDragging) return;
+    const deltaX = e.touches[0].clientX - previousX;
+    previousX = e.touches[0].clientX;
+    avatarRotationY += deltaX * 0.9;
+    updateAvatarRotation();
+  }, { passive: true });
+
+  document.addEventListener("mouseup", () => {
+    isDragging = false;
+    canvas.style.cursor = "grab";
+  });
+
+  document.addEventListener("touchend", () => {
+    isDragging = false;
+  });
+}
+
 
 // Calculate Dynamic rank score
 function getTrendWeightedScore(t) {
@@ -565,6 +637,13 @@ function navigateTo(screenId) {
   } else if (screenId === "avatar") {
     renderAvatarShop();
     updateAvatarDisplays();
+    setupAvatar3DRotation();
+    
+    // Smooth drag horizontal scrolling for categories and items
+    const shopGrid = document.getElementById("avatar-shop-grid");
+    if (shopGrid) setupDragToScroll(shopGrid);
+    const shopTabs = document.getElementById("avatar-shop-tabs");
+    if (shopTabs) setupDragToScroll(shopTabs);
   } else if (screenId === "profile") {
     renderProfileView();
   }
