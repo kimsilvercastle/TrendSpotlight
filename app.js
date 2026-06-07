@@ -122,171 +122,256 @@ function updateGemBadge() {
   badges.forEach(b => { b.textContent = state.gems; });
 }
 
-// SVG Generator (Cute Humanoid Plushie Doll Design - Safeguards basic shape even if all config is None)
+// SVG Generator (Detailed Nendoroid/Ball-Jointed Doll Proportions)
 function generateAvatarSVG(config) {
-  const skinColor = "#ffdbac";
+  const skinColor = "#f4d0b5"; // Warm, soft vinyl doll skin tone
+  const shadowColor = "#d7a98c"; // Joint / shadow depth color
   
-  let eyeSVG = `<circle cx="65" cy="85" r="7.5" fill="#111" /><circle cx="115" cy="85" r="7.5" fill="#111" /><circle cx="62" cy="82" r="2.5" fill="#fff" /><circle cx="112" cy="82" r="2.5" fill="#fff" />`;
+  // 1. Face Features
+  let eyeSVG = `
+    <!-- Left Eye -->
+    <ellipse cx="68" cy="85" rx="8" ry="10" fill="#2d221c" />
+    <ellipse cx="68" cy="85" rx="6" ry="8" fill="#1b120c" />
+    <circle cx="65" cy="81" r="3" fill="#ffffff" />
+    <circle cx="71" cy="89" r="1.5" fill="#ffffff" />
+    <!-- Right Eye -->
+    <ellipse cx="112" cy="85" rx="8" ry="10" fill="#2d221c" />
+    <ellipse cx="112" cy="85" rx="6" ry="8" fill="#1b120c" />
+    <circle cx="109" cy="81" r="3" fill="#ffffff" />
+    <circle cx="115" cy="89" r="1.5" fill="#ffffff" />
+  `;
+
   if (config.eyes === "Sparkling") {
-    eyeSVG = `<circle cx="65" cy="85" r="7" fill="#111" />
-              <circle cx="115" cy="85" r="7" fill="#111" />
-              <polygon points="65,81 67,85 71,85 68,87 69,91 65,89 61,91 62,87 59,85 63,85" fill="#fff"/>
-              <polygon points="115,81 117,85 121,85 118,87 119,91 115,89 111,91 112,87 109,85 113,85" fill="#fff"/>`;
+    eyeSVG = `
+      <ellipse cx="68" cy="85" rx="8" ry="10" fill="#2d221c" />
+      <polygon points="68,79 70,83 74,83 71,85 72,89 68,87 64,89 65,85 62,83 66,83" fill="#fff"/>
+      <ellipse cx="112" cy="85" rx="8" ry="10" fill="#2d221c" />
+      <polygon points="112,79 114,83 118,83 115,85 116,89 112,87 108,89 109,85 106,83 110,83" fill="#fff"/>
+    `;
   } else if (config.eyes === "Blinking") {
-    eyeSVG = `<path d="M57,85 Q65,78 73,85" fill="none" stroke="#222" stroke-width="4" stroke-linecap="round" />
-              <circle cx="115" cy="85" r="7.5" fill="#111" />
-              <circle cx="117" cy="82" r="2.5" fill="#fff"/>`;
+    eyeSVG = `
+      <path d="M60,85 Q68,78 76,85" fill="none" stroke="#2d221c" stroke-width="3.5" stroke-linecap="round" />
+      <ellipse cx="112" cy="85" rx="8" ry="10" fill="#2d221c" />
+      <circle cx="109" cy="81" r="3" fill="#ffffff" />
+    `;
   } else if (config.eyes === "Cat Eyes") {
-    eyeSVG = `<ellipse cx="65" cy="85" rx="8" ry="5.5" fill="#b624ff" stroke="#fff" stroke-width="1.2"/>
-              <ellipse cx="115" cy="85" rx="8" ry="5.5" fill="#b624ff" stroke="#fff" stroke-width="1.2"/>
-              <ellipse cx="65" cy="85" rx="2" ry="5" fill="#000"/>
-              <ellipse cx="115" cy="85" rx="2" ry="5" fill="#000"/>`;
+    eyeSVG = `
+      <ellipse cx="68" cy="85" rx="8.5" ry="7" fill="#b624ff" stroke="#fff" stroke-width="1"/>
+      <ellipse cx="112" cy="85" rx="8.5" ry="7" fill="#b624ff" stroke="#fff" stroke-width="1"/>
+      <ellipse cx="68" cy="85" rx="2" ry="6" fill="#000"/>
+      <ellipse cx="112" cy="85" rx="2" ry="6" fill="#000"/>
+    `;
   }
 
   let contactsOverlay = "";
   if (config.contacts && config.contacts !== "Standard Gray") {
     let color = "transparent";
-    if (config.contacts === "Blue Ring") color = "rgba(0, 242, 254, 0.4)";
-    if (config.contacts === "Purple Glow") color = "rgba(182, 36, 255, 0.4)";
+    if (config.contacts === "Blue Ring") color = "rgba(0, 242, 254, 0.45)";
+    if (config.contacts === "Purple Glow") color = "rgba(182, 36, 255, 0.45)";
     if (config.contacts === "Cat Eye Gold") color = "rgba(254, 218, 0, 0.5)";
-    contactsOverlay = `<circle cx="65" cy="85" r="7.5" fill="${color}" />
-                       <circle cx="115" cy="85" r="7.5" fill="${color}" />`;
+    contactsOverlay = `
+      <circle cx="68" cy="85" r="7.5" fill="${color}" />
+      <circle cx="112" cy="85" r="7.5" fill="${color}" />
+    `;
   }
 
-  let mouthSVG = `<path d="M78,103 Q90,113 102,103" fill="none" stroke="#222" stroke-width="3" stroke-linecap="round" stroke-dasharray="2.5,1.5"/>`;
+  let mouthSVG = `<path d="M84,103 Q90,109 96,103" fill="none" stroke="#2d221c" stroke-width="2.5" stroke-linecap="round"/>`;
   if (config.mouth === "Surprised") {
-    mouthSVG = `<circle cx="90" cy="108" r="5" fill="#8b0000"/>`;
+    mouthSVG = `<ellipse cx="90" cy="104" rx="4" ry="5.5" fill="#c94a4a" stroke="#2d221c" stroke-width="1.5"/>`;
   } else if (config.mouth === "Cool Smirk") {
-    mouthSVG = `<path d="M82,106 Q95,101 98,109" fill="none" stroke="#222" stroke-width="2.5" stroke-linecap="round"/>`;
+    mouthSVG = `<path d="M84,105 Q93,101 97,107" fill="none" stroke="#2d221c" stroke-width="2.5" stroke-linecap="round"/>`;
   } else if (config.mouth === "Whistling") {
-    mouthSVG = `<circle cx="90" cy="107" r="3.5" fill="none" stroke="#222" stroke-width="3"/>`;
+    mouthSVG = `<circle cx="90" cy="104" r="3" fill="none" stroke="#2d221c" stroke-width="2.5"/>`;
   }
 
   let accessoriesSVG = "";
   if (config.accessory === "Cool Sunglasses") {
-    accessoriesSVG = `<polygon points="45,78 78,78 74,94 50,94" fill="#111" opacity="0.9"/>
-                      <polygon points="102,78 135,78 131,94 107,94" fill="#111" opacity="0.9"/>
-                      <line x1="78" y1="83" x2="102" y2="83" stroke="#fff" stroke-width="2"/>`;
+    accessoriesSVG = `
+      <polygon points="46,78 79,78 75,93 51,93" fill="#111" opacity="0.9"/>
+      <polygon points="101,78 134,78 130,93 106,93" fill="#111" opacity="0.9"/>
+      <line x1="79" y1="83" x2="101" y2="83" stroke="#fff" stroke-width="2.5"/>
+    `;
   } else if (config.accessory === "Cyber Visor") {
-    accessoriesSVG = `<polygon points="36,75 144,73 138,96 42,98" fill="rgba(182, 36, 255, 0.7)" stroke="#ff2a85" stroke-width="2"/>`;
+    accessoriesSVG = `<polygon points="38,76 142,74 136,95 44,97" fill="rgba(182, 36, 255, 0.75)" stroke="#ff2a85" stroke-width="2"/>`;
   } else if (config.accessory === "Cute Blush") {
-    accessoriesSVG = `<ellipse cx="54" cy="94" rx="10" ry="5.5" fill="#ff5e9f" opacity="0.5"/>
-                      <ellipse cx="126" cy="94" rx="10" ry="5.5" fill="#ff5e9f" opacity="0.5"/>`;
+    accessoriesSVG = `
+      <ellipse cx="55" cy="94" rx="9" ry="4.5" fill="#ff7da7" opacity="0.45"/>
+      <ellipse cx="125" cy="94" rx="9" ry="4.5" fill="#ff7da7" opacity="0.45"/>
+    `;
   }
 
+  // 2. Hair Options
   let hairSVG = "";
   if (config.hair !== "None") {
     switch(config.hair) {
       case "Long Blonde":
-        hairSVG = `<path d="M45,55 Q90,20 135,55 L138,120 L124,120 L120,68 L60,68 L56,120 L42,120 Z" fill="#ffd700" stroke="#d5b500" stroke-width="1.5" stroke-dasharray="3,2"/>`;
+        hairSVG = `
+          <!-- Back Hair -->
+          <path d="M40,65 C25,120 30,170 30,200 L45,200 C45,160 55,100 55,75 Z" fill="#fadc5c"/>
+          <path d="M140,65 C155,120 150,170 150,200 L135,200 C135,160 125,100 125,75 Z" fill="#fadc5c"/>
+          <!-- Front Hair -->
+          <path d="M45,55 Q90,20 135,55 L138,82 Q125,58 90,58 Q55,58 42,82 Z" fill="#fadc5c" stroke="#cfad32" stroke-width="1"/>
+        `;
         break;
       case "Curly Brown":
-        hairSVG = `<path d="M40,55 Q90,15 140,55 Q150,68 136,78 L125,82 Q90,62 55,82 L44,78 Q28,68 40,55 Z" fill="#8b4513" stroke="#60300d" stroke-width="1.5" stroke-dasharray="3,2"/>`;
+        hairSVG = `<path d="M40,55 Q90,12 140,55 Q152,65 138,78 L126,81 Q90,62 54,81 L42,78 Q28,65 40,55 Z" fill="#91522b" stroke="#663414" stroke-width="1"/>`;
         break;
       case "Hip Pink":
-        hairSVG = `<path d="M45,52 Q90,22 135,52 L142,95 L128,100 L124,70 L56,70 L52,100 L38,95 Z" fill="#ff2a85" stroke="#cc1a65" stroke-width="1.5" stroke-dasharray="3,2"/>`;
+        hairSVG = `
+          <!-- Back Twintails -->
+          <path d="M38,65 C15,85 10,130 25,150 C32,150 45,120 48,80 Z" fill="#ff4d94"/>
+          <path d="M142,65 C165,85 170,130 155,150 C148,150 135,120 132,80 Z" fill="#ff4d94"/>
+          <!-- Front Hair -->
+          <path d="M45,52 Q90,20 135,52 L140,90 L128,95 L124,70 Q90,64 56,70 L52,95 L40,90 Z" fill="#ff4d94" stroke="#cc1a65" stroke-width="1"/>
+        `;
         break;
       default: // Short Black
-        hairSVG = `<path d="M46,55 Q90,28 134,55 L138,82 L126,82 Q90,52 54,82 L42,82 Z" fill="#222" stroke="#000" stroke-dasharray="3,2"/>`;
+        hairSVG = `<path d="M45,55 Q90,24 135,55 L139,80 Q120,52 90,52 Q60,52 41,80 Z" fill="#2d2d30" stroke="#111" stroke-width="1"/>`;
     }
   }
 
-  let topSVG = `<path d="M50,138 H130 L145,180 L125,185 L115,165 V190 H65 V165 L55,185 L35,180 Z" fill="#444" stroke="#222" stroke-dasharray="4,2" />`; // safety basic top
+  // 3. Outfit / clothing integration mapped to the new realistic body proportions
+  let topSVG = "";
   if (config.top && config.top !== "None") {
     if(config.top === "Hoodie Grey") {
-      topSVG = `<path d="M48,138 H132 L145,180 L125,185 L115,165 V195 H65 V165 L55,185 L35,180 Z" fill="#78909c" stroke="#546e7a" stroke-dasharray="4,2"/>`;
+      topSVG = `
+        <!-- Torso Hoodie Coat -->
+        <path d="M72,132 C70,145 68,172 72,192 C78,194 102,194 108,192 C112,172 110,145 108,132 Z" fill="#78909c" />
+        <!-- Hood Collar -->
+        <ellipse cx="90" cy="133" rx="19" ry="6.5" fill="#546e7a" />
+      `;
     } else if(config.top === "Leather Jacket") {
-      topSVG = `<path d="M48,138 H132 L145,180 L125,185 L115,165 V195 H65 V165 L55,185 L35,180 Z" fill="#263238" stroke="#102027" stroke-dasharray="4,2"/>`;
+      topSVG = `
+        <path d="M72,132 C70,145 68,172 72,192 C78,194 102,194 108,192 C112,172 110,145 108,132 Z" fill="#2d3748" />
+        <!-- Zipper details -->
+        <line x1="90" y1="135" x2="90" y2="191" stroke="#a0aec0" stroke-width="2" />
+      `;
     } else if(config.top === "Crop Top Neon") {
-      topSVG = `<path d="M50,138 H130 L140,165 L120,168 L112,156 V158 H68 V156 L60,168 L40,165 Z" fill="#b624ff" stroke="#00f2fe" stroke-dasharray="4,2"/>`;
+      topSVG = `
+        <!-- Crop Tank Torso overlay -->
+        <path d="M73,134 C71,142 70,154 71,162 H109 C110,154 109,142 107,134 Z" fill="#ff2a85" stroke="#00f2fe" stroke-width="1"/>
+      `;
     }
   }
 
-  let bottomSVG = `<path d="M64,185 H116 V220 H64 Z" fill="#1e3a8a" stroke="#172554" stroke-dasharray="3,2"/>`; // safety basic bottom
+  let bottomSVG = "";
   if (config.bottom && config.bottom !== "None") {
     if(config.bottom === "Cargo Pants Black") {
-      bottomSVG = `<path d="M64,185 H116 V230 H64 Z" fill="#1e293b" stroke="#0f172a" stroke-dasharray="3,2"/>`;
+      bottomSVG = `
+        <!-- Pants covering hip and thighs -->
+        <path d="M72,185 C68,195 65,225 72,230 H86 L88,195 L92,195 L94,230 H108 C115,225 112,195 108,185 Z" fill="#1a202c" />
+      `;
     } else if(config.bottom === "Denim Skirt") {
-      bottomSVG = `<path d="M62,185 H118 L122,215 H58 Z" fill="#2563eb" stroke="#1d4ed8" stroke-dasharray="3,2"/>`;
+      bottomSVG = `
+        <!-- Cute flared skirt structure -->
+        <path d="M71,185 L65,208 H115 L109,185 Z" fill="#2b6cb0" stroke="#1a365d" stroke-width="1"/>
+      `;
     } else if(config.bottom === "Wide Slacks") {
-      bottomSVG = `<path d="M62,185 H118 L120,235 H93 V205 H87 V235 H60 Z" fill="#334155" stroke="#1e293b" stroke-dasharray="3,2"/>`;
+      bottomSVG = `
+        <path d="M71,185 C66,192 62,235 68,238 H86 L88,198 L92,198 L94,238 H112 C118,235 114,192 109,185 Z" fill="#4a5568" />
+      `;
     }
   }
 
-  let shoesSVG = `<rect x="64" y="235" width="18" height="8" rx="2" fill="#fff" stroke="#ccc" stroke-dasharray="2,1"/><rect x="98" y="235" width="18" height="8" rx="2" fill="#fff" stroke="#ccc" stroke-dasharray="2,1"/>`;
+  let shoesSVG = "";
   if (config.shoes && config.shoes !== "None") {
     if(config.shoes === "Chunky Boots") {
-      shoesSVG = `<rect x="62" y="232" width="22" height="12" rx="3" fill="#111"/>
-                  <rect x="96" y="232" width="22" height="12" rx="3" fill="#111"/>`;
+      shoesSVG = `
+        <path d="M63,234 C58,238 60,248 78,248 C81,248 81,234 63,234 Z" fill="#1a202c" />
+        <path d="M117,234 C122,238 120,248 102,248 C99,248 99,234 117,234 Z" fill="#1a202c" />
+      `;
     } else if(config.shoes === "High Heels Red") {
-      shoesSVG = `<path d="M64,237 L78,230 L80,240 Z" fill="#ff2a85"/>
-                  <path d="M98,237 L112,230 L114,240 Z" fill="#ff2a85"/>`;
+      shoesSVG = `
+        <path d="M63,235 L78,230 L80,246 Z" fill="#e53e3e"/>
+        <path d="M117,235 L102,230 L100,246 Z" fill="#e53e3e"/>
+      `;
     }
   }
 
   let handSVG = "";
   if (config.hand && config.hand !== "None") {
     if(config.hand === "V Sign Sparkle") {
-      handSVG = `<circle cx="28" cy="155" r="6" fill="${skinColor}" stroke="#e0a890" />
-                 <line x1="28" y1="150" x2="22" y2="140" stroke="${skinColor}" stroke-width="4"/>
-                 <line x1="30" y1="150" x2="36" y2="140" stroke="${skinColor}" stroke-width="4"/>`;
+      handSVG = `
+        <!-- Custom V Hand Overlay on Right side -->
+        <circle cx="138" cy="170" r="5" fill="${skinColor}" />
+        <path d="M138,168 L142,158 M135,168 L136,156" stroke="${skinColor}" stroke-width="2.5" stroke-linecap="round"/>
+      `;
     } else if(config.hand === "Bubble Tea") {
-      handSVG = `<line x1="25" y1="130" x2="25" y2="175" stroke="#d2b48c" stroke-width="2.5" stroke-linecap="round"/>
-                 <circle cx="25" cy="133" r="4.5" fill="#ff2a85"/>
-                 <circle cx="25" cy="144" r="4.5" fill="#f59e0b"/>
-                 <circle cx="25" cy="155" r="4.5" fill="#10b981"/>
-                 <circle cx="25" cy="160" r="6" fill="${skinColor}" stroke="#e0a890" />`;
+      handSVG = `
+        <rect x="130" y="160" width="10" height="15" rx="2" fill="#dd6b20" />
+        <line x1="135" y1="156" x2="135" y2="172" stroke="#4a5568" stroke-width="2"/>
+        <circle cx="133" cy="174" r="5" fill="${skinColor}" />
+      `;
     } else if(config.hand === "Holding Mic") {
-      handSVG = `<line x1="26" y1="150" x2="26" y2="175" stroke="#111" stroke-width="4"/>
-                 <circle cx="26" cy="144" r="5" fill="#ff2a85"/>
-                 <circle cx="26" cy="158" r="6" fill="${skinColor}" stroke="#e0a890" />`;
+      handSVG = `
+        <line x1="133" y1="162" x2="133" y2="178" stroke="#1a202c" stroke-width="3"/>
+        <circle cx="133" cy="158" r="4" fill="#d53f8c" />
+        <circle cx="133" cy="170" r="5" fill="${skinColor}" />
+      `;
     }
   }
 
   let headwearSVG = "";
   if (config.headwear && config.headwear !== "None") {
     if(config.headwear === "Beanie Hat") {
-      headwearSVG = `<path d="M50,55 C50,25 130,25 130,55 Z" fill="#3b82f6" stroke="#2563eb" stroke-dasharray="3,2"/>
-                     <rect x="45" y="50" width="90" height="12" rx="4" fill="#1d4ed8"/>`;
+      headwearSVG = `
+        <path d="M52,50 C52,20 128,20 128,50 Z" fill="#3182ce" />
+        <rect x="46" y="46" width="88" height="10" rx="3" fill="#2b6cb0" />
+      `;
     } else if(config.headwear === "Ribbon Headband") {
-      headwearSVG = `<path d="M46,55 Q90,40 134,55" fill="none" stroke="#ff2a85" stroke-width="6"/>
-                     <circle cx="90" cy="42" r="8" fill="#ff2a85"/>`;
+      headwearSVG = `
+        <path d="M48,55 Q90,42 132,55" fill="none" stroke="#e53e3e" stroke-width="5"/>
+        <circle cx="90" cy="40" r="7.5" fill="#e53e3e"/>
+      `;
     } else if(config.headwear === "Earphones") {
-      headwearSVG = `<path d="M44,70 Q90,25 136,70" fill="none" stroke="#fff" stroke-width="4"/>
-                     <rect x="36" y="65" width="12" height="20" rx="4" fill="#111"/>
-                     <rect x="132" y="65" width="12" height="20" rx="4" fill="#111"/>`;
+      headwearSVG = `
+        <path d="M46,70 Q90,26 134,70" fill="none" stroke="#edf2f7" stroke-width="4.5"/>
+        <rect x="38" y="65" width="10" height="18" rx="4" fill="#2d3748"/>
+        <rect x="132" y="65" width="10" height="18" rx="4" fill="#2d3748"/>
+      `;
     }
   }
 
   let crownSVG = "";
   if (config.crown && config.crown !== "None") {
     if(config.crown === "Golden Crown") {
-      crownSVG = `<polygon points="52,48 62,20 78,34 90,14 102,34 118,20 128,48" fill="#ffd700" stroke="#d97706" stroke-width="1"/>`;
+      crownSVG = `<polygon points="55,46 65,18 80,32 90,12 100,32 115,18 125,46" fill="#ecc94b" stroke="#b7791f" stroke-width="1.2"/>`;
     } else if(config.crown === "Ice Tiara") {
-      crownSVG = `<polygon points="56,48 72,25 90,18 108,25 124,48" fill="rgba(0, 242, 254, 0.7)" stroke="#00f2fe" stroke-width="1"/>`;
+      crownSVG = `<polygon points="58,46 72,23 90,16 108,23 122,46" fill="rgba(0, 242, 254, 0.75)" stroke="#00b5d8" stroke-width="1.2"/>`;
     } else if(config.crown === "Flower Wreath") {
-      crownSVG = `<ellipse cx="90" cy="46" rx="40" ry="8" fill="none" stroke="#10b981" stroke-width="3"/>
-                  <circle cx="65" cy="44" r="4.5" fill="#ef4444"/><circle cx="90" cy="42" r="4.5" fill="#ff2a85"/><circle cx="115" cy="44" r="4.5" fill="#3b82f6"/>`;
+      crownSVG = `
+        <ellipse cx="90" cy="44" rx="36" ry="7" fill="none" stroke="#38a169" stroke-width="3.5"/>
+        <circle cx="68" cy="42" r="4" fill="#e53e3e"/><circle cx="90" cy="40" r="4" fill="#ed64a6"/><circle cx="112" cy="42" r="4" fill="#3182ce"/>
+      `;
     }
   }
 
   let backSVG = "";
   if (config.back && config.back !== "None") {
     if(config.back === "Angel Wings") {
-      backSVG = `<path d="M38,120 C0,90 10,50 50,70 C40,85 42,100 50,115 Z" fill="#fff" opacity="0.9" stroke="#ddd" stroke-dasharray="3,2"/>
-                 <path d="M142,120 C180,90 170,50 130,70 C140,85 138,100 130,115 Z" fill="#fff" opacity="0.9" stroke="#ddd" stroke-dasharray="3,2"/>`;
+      backSVG = `
+        <path d="M38,125 C-5,90 10,45 48,70 C38,85 40,105 48,120 Z" fill="#ffffff" opacity="0.95" stroke="#e2e8f0" stroke-width="1"/>
+        <path d="M142,125 C185,90 170,45 132,70 C142,85 140,105 132,120 Z" fill="#ffffff" opacity="0.95" stroke="#e2e8f0" stroke-width="1"/>
+      `;
     } else if(config.back === "Neon Boosters") {
-      backSVG = `<rect x="35" y="110" width="16" height="40" rx="3" fill="#ff2a85" filter="drop-shadow(0 0 6px #ff2a85)"/>
-                 <rect x="129" y="110" width="16" height="40" rx="3" fill="#ff2a85" filter="drop-shadow(0 0 6px #ff2a85)"/>`;
+      backSVG = `
+        <rect x="36" y="112" width="14" height="42" rx="4" fill="#ff2a85" filter="drop-shadow(0 0 5px #ff2a85)"/>
+        <rect x="130" y="112" width="14" height="42" rx="4" fill="#ff2a85" filter="drop-shadow(0 0 5px #ff2a85)"/>
+      `;
     } else if(config.back === "School Backpack") {
-      backSVG = `<rect x="58" y="130" width="64" height="46" rx="12" fill="#3b82f6" stroke="#2563eb" stroke-width="2"/>`;
+      backSVG = `<rect x="62" y="132" width="56" height="48" rx="10" fill="#3182ce" stroke="#2b6cb0" stroke-width="2.5"/>`;
     }
   }
 
   return `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 260">
       <defs>
-        <radialGradient id="grad-face" cx="50%" cy="50%" r="50%">
+        <!-- Soft ambient lighting to resemble Nendoroid smooth shadow texture -->
+        <radialGradient id="grad-face" cx="50%" cy="45%" r="55%">
+          <stop offset="60%" stop-color="#fff5f0" />
+          <stop offset="100%" stop-color="${skinColor}" />
+        </radialGradient>
+        <radialGradient id="grad-body" cx="50%" cy="30%" r="70%">
           <stop offset="0%" stop-color="#fff5f0" />
           <stop offset="100%" stop-color="${skinColor}" />
         </radialGradient>
@@ -295,27 +380,79 @@ function generateAvatarSVG(config) {
       <!-- Back Item -->
       ${backSVG}
 
-      <!-- Ears (Stitched humanoid side ears) -->
-      <circle cx="48" cy="95" r="10" fill="${skinColor}" stroke="#e0a890" stroke-width="1.5" stroke-dasharray="2,2"/>
-      <circle cx="132" cy="95" r="10" fill="${skinColor}" stroke="#e0a890" stroke-width="1.5" stroke-dasharray="2,2"/>
+      <!-- Ears (Round, side-positioned ball joints) -->
+      <circle cx="43" cy="94" r="8.5" fill="${skinColor}" stroke="${shadowColor}" stroke-width="0.8"/>
+      <circle cx="137" cy="94" r="8.5" fill="${skinColor}" stroke="${shadowColor}" stroke-width="0.8"/>
 
-      <!-- Body / Head Base -->
-      <path d="M70,120 Q90,135 110,120 L115,138 H65 Z" fill="${skinColor}" stroke="#e0a890" stroke-width="1.5" stroke-dasharray="2,2" />
-      <circle cx="90" cy="95" r="42" fill="url(#grad-face)" stroke="#e0a890" stroke-width="1.5" stroke-dasharray="3,2" />
+      <!-- Neck Joint -->
+      <path d="M85,124 L85,135 L95,135 L95,124 Z" fill="${skinColor}" stroke="${shadowColor}" stroke-width="0.8" />
+
+      <!-- Left Jointed Arm -->
+      <g id="arm-left">
+        <!-- Shoulder -->
+        <circle cx="68" cy="144" r="6" fill="${skinColor}" stroke="${shadowColor}" stroke-width="0.8" />
+        <!-- Upper Arm -->
+        <path d="M63,144 L53,165 L59,168 L69,148 Z" fill="${skinColor}" />
+        <!-- Elbow Joint -->
+        <circle cx="56" cy="166" r="4.5" fill="${skinColor}" stroke="${shadowColor}" stroke-width="0.8" />
+        <!-- Forearm & Hand -->
+        <path d="M56,166 L46,182 C44,185 49,188 51,185 L59,170 Z" fill="${skinColor}" />
+      </g>
+
+      <!-- Right Jointed Arm -->
+      <g id="arm-right">
+        <!-- Shoulder -->
+        <circle cx="112" cy="144" r="6" fill="${skinColor}" stroke="${shadowColor}" stroke-width="0.8" />
+        <!-- Upper Arm -->
+        <path d="M112,144 L122,165 L128,162 L118,141 Z" fill="${skinColor}" />
+        <!-- Elbow Joint -->
+        <circle cx="124" cy="166" r="4.5" fill="${skinColor}" stroke="${shadowColor}" stroke-width="0.8" />
+        <!-- Forearm & Hand -->
+        <path d="M124,166 L134,182 C136,185 131,188 129,185 L121,170 Z" fill="${skinColor}" />
+      </g>
+
+      <!-- Torso (Slim articulated waist, curved pear-shaped hips) -->
+      <path d="M74,136 Q90,132 106,136 L109,170 Q90,195 71,170 Z" fill="url(#grad-body)" stroke="${shadowColor}" stroke-width="0.8" />
+      <path d="M71,170 Q90,195 109,170 Q106,192 90,194 Q74,192 71,170 Z" fill="${skinColor}" />
+
+      <!-- Head (Chubby spherical face, prominent cute nose bridge) -->
+      <circle cx="90" cy="92" r="45" fill="url(#grad-face)" stroke="${shadowColor}" stroke-width="0.8" />
       
       <!-- Face details -->
       ${eyeSVG}
       ${contactsOverlay}
       ${mouthSVG}
 
-      <!-- Nose Snout -->
-      <ellipse cx="90" cy="100" rx="6" ry="4" fill="#fff" stroke="#e0a890" stroke-width="1" />
-      <polygon points="90,98 88,100 92,100" fill="#111" />
+      <!-- Small Cute Nose (Matching reference 3D sculpture nose tip) -->
+      <polygon points="90,95 87,99 93,99" fill="${skinColor}" />
+      <path d="M87,99 Q90,101 93,99" fill="none" stroke="${shadowColor}" stroke-width="0.7"/>
 
-      <!-- Hair Layer (Back) -->
+      <!-- Hair Layer (Front) -->
       ${hairSVG}
 
-      <!-- Clothing Layers -->
+      <!-- Left Leg (Thick rounded thighs, defined ankles & feet) -->
+      <g id="leg-left">
+        <!-- Thigh joint -->
+        <circle cx="78" cy="190" r="7" fill="${skinColor}" stroke="${shadowColor}" stroke-width="0.8" />
+        <!-- Leg cylinder -->
+        <path d="M71,190 C71,215 73,238 74,244 C76,248 62,248 64,242 L72,192 Z" fill="${skinColor}" />
+        <!-- Ankle socket & foot -->
+        <ellipse cx="73" cy="244" rx="6.5" ry="3.5" fill="${skinColor}" stroke="${shadowColor}" stroke-width="0.8" />
+        <path d="M68,243 C68,248 78,248 78,243 Z" fill="${skinColor}" />
+      </g>
+
+      <!-- Right Leg (Thick rounded thighs, defined ankles & feet) -->
+      <g id="leg-right">
+        <!-- Thigh joint -->
+        <circle cx="102" cy="190" r="7" fill="${skinColor}" stroke="${shadowColor}" stroke-width="0.8" />
+        <!-- Leg cylinder -->
+        <path d="M109,190 C109,215 107,238 106,244 C104,248 118,248 116,242 L108,192 Z" fill="${skinColor}" />
+        <!-- Ankle socket & foot -->
+        <ellipse cx="107" cy="244" rx="6.5" ry="3.5" fill="${skinColor}" stroke="${shadowColor}" stroke-width="0.8" />
+        <path d="M102,243 C102,248 112,248 112,243 Z" fill="${skinColor}" />
+      </g>
+
+      <!-- Clothing Layers & Accessories Overlays -->
       ${bottomSVG}
       ${topSVG}
       ${shoesSVG}
