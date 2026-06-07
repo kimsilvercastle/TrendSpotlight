@@ -1042,6 +1042,8 @@ function setFormatInner(f) { currentActiveFilters.formatInner = f; setHomeFilter
 function setThemeInner(t) { currentActiveFilters.themeInner = t; setHomeFilter("theme", t); }
 function setEraInner(e) { currentActiveFilters.eraInner = e; setHomeFilter("era", e); }
 
+let currentFacingMode = "user";
+
 // Camera Simulator
 async function startCameraSimulator() {
   const container = document.getElementById("camera-stream-box");
@@ -1052,11 +1054,14 @@ async function startCameraSimulator() {
     return;
   }
 
+  // Stop any active stream first to release the hardware camera lock
+  stopCameraStream();
+
   try {
     let stream;
     try {
-      // Prefer front camera on mobile devices
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      // Use the active camera direction
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: currentFacingMode } });
     } catch (e) {
       stream = await navigator.mediaDevices.getUserMedia({ video: true });
     }
@@ -1073,10 +1078,44 @@ async function startCameraSimulator() {
     player.setAttribute('playsinline', '');
     
     player.play().catch(e => console.warn("Video play error:", e));
+
+    // Initialize swipe gesture listener once
+    if (!container.dataset.swipeInitialized) {
+      setupCameraSwipeGestures(container);
+      container.dataset.swipeInitialized = "true";
+    }
   } catch (err) {
     loadMockWebcam(container);
   }
 }
+
+function toggleCameraFacing() {
+  currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
+  showToast(currentFacingMode === "user" ? "전면 카메라로 전환합니다 🤳" : "후면 카메라로 전환합니다 📸");
+  startCameraSimulator();
+}
+
+function setupCameraSwipeGestures(container) {
+  let touchstartX = 0;
+  let touchendX = 0;
+  
+  container.addEventListener('touchstart', e => {
+    touchstartX = e.changedTouches[0].screenX;
+  }, { passive: true });
+  
+  container.addEventListener('touchend', e => {
+    touchendX = e.changedTouches[0].screenX;
+    handleGesture();
+  }, { passive: true });
+  
+  function handleGesture() {
+    // Detect horizontal swipe of at least 80px
+    if (Math.abs(touchendX - touchstartX) > 80) {
+      toggleCameraFacing();
+    }
+  }
+}
+
 
 function loadMockWebcam(container) {
   container.innerHTML = `
