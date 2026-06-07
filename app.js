@@ -399,31 +399,41 @@ function generateAvatarSVG(config, isBack = false) {
     }
   }
 
-  // Paws and feet structures
+  // Calculate dynamic 3D projection offsets based on rotation Y angle
+  // This simulates perspective translation and depth shifts (like eyes, nose, and ears moving across the sphere)
+  const angleRad = (avatarRotationY * Math.PI) / 180;
+  const depthShiftX = Math.sin(angleRad) * 16;
+  const zScale = 0.9 + Math.cos(angleRad) * 0.1;
+
+  // Paws and feet structures (Adjusted coordinate points to seamlessly plug legs diagonally behind the pear torso)
+  // Left arm and leg are on the left side, right arm and leg on the right side.
+  // Legs now extend diagonally outwards at the hips and connect securely behind the torso.
   const armLeft = `
-    <g id="arm-left">
-      <path d="M54,136 Q32,152 48,168 Q64,152 58,136" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2" />
-      <path d="M54,136 Q32,152 48,168" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,2" />
+    <g id="arm-left" transform="translate(${depthShiftX * 0.4}, 0)">
+      <path d="M56,138 Q28,154 44,172 Q62,154 58,138" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2.2" />
+      <path d="M56,138 Q28,154 44,172" fill="none" stroke="${stitchColor}" stroke-width="1.8" stroke-dasharray="3,2" />
     </g>
   `;
   const armRight = `
-    <g id="arm-right">
-      <path d="M126,136 Q148,152 132,168 Q116,152 122,136" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2" />
-      <path d="M126,136 Q148,152 132,168" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,2" />
+    <g id="arm-right" transform="translate(${depthShiftX * 0.4}, 0)">
+      <path d="M124,138 Q152,154 136,172 Q118,154 122,138" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2.2" />
+      <path d="M124,138 Q152,154 136,172" fill="none" stroke="${stitchColor}" stroke-width="1.8" stroke-dasharray="3,2" />
     </g>
   `;
+  // Legs are shifted diagonally to intersect the lower curve of the pear body (M74,188 / M106,188)
   const legLeft = `
-    <g id="leg-left">
-      <path d="M58,188 Q44,228 66,236 Q88,228 78,188" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2" />
-      <path d="M58,188 Q44,228 66,236" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,3" />
+    <g id="leg-left" transform="translate(${depthShiftX * 0.3}, 0)">
+      <path d="M68,185 Q46,224 64,236 Q84,228 78,185 Z" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2.2" />
+      <path d="M68,185 Q46,224 64,236" fill="none" stroke="${stitchColor}" stroke-width="1.8" stroke-dasharray="3,3" />
     </g>
   `;
   const legRight = `
-    <g id="leg-right">
-      <path d="M122,188 Q136,228 114,236 Q92,228 102,188" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2" />
-      <path d="M122,188 Q136,228 114,236" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,3" />
+    <g id="leg-right" transform="translate(${depthShiftX * 0.3}, 0)">
+      <path d="M112,185 Q134,224 116,236 Q96,228 102,185 Z" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2.2" />
+      <path d="M112,185 Q134,224 116,236" fill="none" stroke="${stitchColor}" stroke-width="1.8" stroke-dasharray="3,3" />
     </g>
   `;
+
 
   return `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 260">
@@ -442,14 +452,14 @@ function generateAvatarSVG(config, isBack = false) {
       <!-- 1. BACK DECORATIONS (If FRONT, render behind the character) -->
       ${!isBack ? backSVG : ''}
 
-      <!-- 2. COZY BEAR EARS -->
-      <circle cx="45" cy="85" r="14" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2"/>
-      <circle cx="45" cy="85" r="8" fill="#ffccd5" />
-      <circle cx="45" cy="85" r="11" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,3" />
+      <!-- 2. COZY BEAR EARS (Shifted dynamically to simulate 3D head rotation) -->
+      <circle cx="${45 + depthShiftX * 0.25}" cy="85" r="14" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2"/>
+      <circle cx="${45 + depthShiftX * 0.25}" cy="85" r="8" fill="#ffccd5" />
+      <circle cx="${45 + depthShiftX * 0.25}" cy="85" r="11" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,3" />
 
-      <circle cx="135" cy="85" r="14" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2"/>
-      <circle cx="135" cy="85" r="8" fill="#ffccd5" />
-      <circle cx="135" cy="85" r="11" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,3" />
+      <circle cx="${135 + depthShiftX * 0.25}" cy="85" r="14" fill="${skinColor}" stroke="${outlineColor}" stroke-width="2"/>
+      <circle cx="${135 + depthShiftX * 0.25}" cy="85" r="8" fill="#ffccd5" />
+      <circle cx="${135 + depthShiftX * 0.25}" cy="85" r="11" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="3,3" />
 
       <!-- 3. LIMBS (Rendered BEHIND torso for completely natural, clean joint overlap) -->
       ${armLeft}
@@ -457,22 +467,29 @@ function generateAvatarSVG(config, isBack = false) {
       ${legLeft}
       ${legRight}
 
-      <!-- 4. TORSO (Seamlessly sits ON TOP of arm/leg connections) -->
-      <path d="M58,134 Q90,126 122,134 Q132,185 90,195 Q48,185 58,134 Z" fill="url(#grad-plush-body)" stroke="${outlineColor}" stroke-width="2" />
-      ${!isBack ? `<line x1="90" y1="134" x2="90" y2="193" stroke="${stitchColor}" stroke-width="2" stroke-dasharray="4,3" />` : ''}
+      <!-- 4. TORSO (Seamlessly sits ON TOP of arm/leg connections, shifts slightly for depth) -->
+      <g id="torso-group" transform="translate(${depthShiftX * 0.2}, 0)">
+        <path d="M58,134 Q90,126 122,134 Q132,185 90,195 Q48,185 58,134 Z" fill="url(#grad-plush-body)" stroke="${outlineColor}" stroke-width="2" />
+        ${!isBack ? `<line x1="90" y1="134" x2="90" y2="193" stroke="${stitchColor}" stroke-width="2" stroke-dasharray="4,3" />` : ''}
+      </g>
 
-      <!-- 5. CHUBBY PLUSH HEAD -->
-      <circle cx="90" cy="92" r="44" fill="url(#grad-plush-head)" stroke="${outlineColor}" stroke-width="2" />
-      <circle cx="90" cy="92" r="39" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="4,4" />
-      
-      <!-- 6. FACE FEATURES (Only if FRONT) -->
-      ${!isBack ? `
-        ${eyeSVG}
-        ${contactsOverlay}
-        ${mouthSVG}
-        <!-- Cute Heart Nose -->
-        <path d="M86,96 Q90,92 94,96 Q90,102 86,96 Z" fill="#e91e63" stroke="#2d221c" stroke-width="1"/>
-      ` : ''}
+      <!-- 5. CHUBBY PLUSH HEAD (Shifts for parallax volumetric rotation) -->
+      <g id="head-group" transform="translate(${depthShiftX * 0.5}, 0)">
+        <circle cx="90" cy="92" r="44" fill="url(#grad-plush-head)" stroke="${outlineColor}" stroke-width="2" />
+        <circle cx="90" cy="92" r="39" fill="none" stroke="${stitchColor}" stroke-width="1.5" stroke-dasharray="4,4" />
+        
+        <!-- 6. FACE FEATURES (Only if FRONT, slides across the face sphere) -->
+        ${!isBack ? `
+          <g id="face-features-group" transform="translate(${depthShiftX * 0.2}, 0)">
+            ${eyeSVG}
+            ${contactsOverlay}
+            ${mouthSVG}
+            <!-- Cute Heart Nose -->
+            <path d="M86,96 Q90,92 94,96 Q90,102 86,96 Z" fill="#e91e63" stroke="#2d221c" stroke-width="1"/>
+          </g>
+        ` : ''}
+      </g>
+
 
       <!-- 7. HAIR / CLOTHES / ACCESSORIES -->
       ${hairSVG}
