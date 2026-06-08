@@ -1,6 +1,6 @@
 // State Management
 let state = {
-  gems: 600,
+  gems: 10600,
   likedList: ["dubai-chocolate"],
   bookmarkedList: ["even-cook"],
   uploadedList: [],
@@ -54,10 +54,12 @@ const shopItems = [
   { id: "Cyber Visor", name: "네온 사이버 고글", category: "accessory", price: 160, unlock: 10 },
   { id: "Cute Blush", name: "볼터치 자수", category: "accessory", price: 40, unlock: 0 },
   // Headwear
+  { id: "None", name: "없음", category: "headwear", price: 0, unlock: 0 },
   { id: "Beanie Hat", name: "스트릿 미니 비니", category: "headwear", price: 70, unlock: 0 },
   { id: "Ribbon Headband", name: "벨벳 레드 머리띠", category: "headwear", price: 100, unlock: 0 },
   { id: "Earphones", name: "헤드폰 소품", category: "headwear", price: 150, unlock: 0 },
   // Back
+  { id: "None", name: "없음", category: "back", price: 0, unlock: 0 },
   { id: "Angel Wings", name: "날개 솜인형 장식", category: "back", price: 320, unlock: 1 },
   { id: "Neon Boosters", name: "네온 테크 백팩", category: "back", price: 260, unlock: 10 },
   { id: "School Backpack", name: "병아리 캐릭터 가방", category: "back", price: 60, unlock: 0 },
@@ -82,18 +84,22 @@ const shopItems = [
   { id: "Denim Skirt", name: "데님 오버롤 스커트", category: "bottom", price: 120, unlock: 0 },
   { id: "Wide Slacks", name: "와이드 핏 슬랙스", category: "bottom", price: 140, unlock: 10 },
   // Hand
+  { id: "None", name: "없음", category: "hand", price: 0, unlock: 0 },
   { id: "V Sign Sparkle", name: "반짝 V 포즈", category: "hand", price: 60, unlock: 0 },
   { id: "Bubble Tea", name: "마라탕후루 소품", category: "hand", price: 80, unlock: 0 },
   { id: "Holding Mic", name: "골드 핸드 마이크", category: "hand", price: 160, unlock: 10 },
   // Contacts
+  { id: "None", name: "없음", category: "contacts", price: 0, unlock: 0 },
   { id: "Standard Gray", name: "블랙 단추 단반사", category: "contacts", price: 0, unlock: 0 },
   { id: "Blue Ring", name: "오션 블루 렌즈", category: "contacts", price: 50, unlock: 0 },
   { id: "Purple Glow", name: "갤럭시 퍼플 렌즈", category: "contacts", price: 100, unlock: 0 },
   { id: "Cat Eye Gold", name: "자개 골드 오드아이", category: "contacts", price: 170, unlock: 10 },
   // Shoes
+  { id: "None", name: "없음", category: "shoes", price: 0, unlock: 0 },
   { id: "Chunky Boots", name: "어글리 청키 워커", category: "shoes", price: 110, unlock: 0 },
   { id: "High Heels Red", name: "레드 미니 힐", category: "shoes", price: 160, unlock: 10 },
   // Crown
+  { id: "None", name: "없음", category: "crown", price: 0, unlock: 0 },
   { id: "Golden Crown", name: "미니 황금 왕관", category: "crown", price: 500, unlock: 1 },
   { id: "Ice Tiara", name: "얼음꽃 티아라", category: "crown", price: 360, unlock: 10 },
   { id: "Flower Wreath", name: "봄꽃 머리 화관", category: "crown", price: 130, unlock: 0 }
@@ -107,6 +113,12 @@ function loadState() {
     } catch (e) {
       console.error("Error loading state", e);
     }
+  }
+  // Award 10000 gems bonus as requested
+  if (!localStorage.getItem("trend_spotlight_gems_bonus_awarded")) {
+    state.gems += 10000;
+    localStorage.setItem("trend_spotlight_gems_bonus_awarded", "true");
+    saveState();
   }
   updateGemBadge();
 }
@@ -507,41 +519,1028 @@ function generateAvatarSVG(config, isBack = false) {
   `;
 }
 
-// Update components visual
-let avatarRotationY = 0;
+// 3D Engine State
+let canvasViewer = {
+  scene: null,
+  camera: null,
+  renderer: null,
+  character: null,
+  reqId: null
+};
+
+let profileViewer = {
+  scene: null,
+  camera: null,
+  renderer: null,
+  character: null,
+  reqId: null
+};
+
+function get3DMaterial(colorVal, roughness = 0.8, metalness = 0.1, transparent = false, opacity = 1.0) {
+  return new THREE.MeshStandardMaterial({
+    color: colorVal,
+    roughness: roughness,
+    metalness: metalness,
+    transparent: transparent,
+    opacity: opacity
+  });
+}
+
+function createFaceTexture(config) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext("2d");
+
+  // Clear transparent background
+  ctx.clearRect(0, 0, 512, 512);
+
+  // 1. Soft Cheeks Blush
+  ctx.save();
+  let blushColor = "rgba(255, 125, 167, 0.4)";
+  let blushRadius = 50;
+  // If Cute Blush accessory is equipped, draw extra bright decorative pink circles and crosses
+  if (config.accessory === "Cute Blush") {
+    blushColor = "rgba(255, 40, 110, 0.75)";
+    blushRadius = 65;
+  }
+  
+  const leftBlushGrad = ctx.createRadialGradient(145, 305, 5, 145, 305, blushRadius);
+  leftBlushGrad.addColorStop(0, blushColor);
+  leftBlushGrad.addColorStop(1, "rgba(255, 125, 167, 0)");
+  ctx.fillStyle = leftBlushGrad;
+  ctx.beginPath();
+  ctx.arc(145, 305, blushRadius, 0, Math.PI * 2);
+  ctx.fill();
+
+  const rightBlushGrad = ctx.createRadialGradient(367, 305, 5, 367, 305, blushRadius);
+  rightBlushGrad.addColorStop(0, blushColor);
+  rightBlushGrad.addColorStop(1, "rgba(255, 125, 167, 0)");
+  ctx.fillStyle = rightBlushGrad;
+  ctx.beginPath();
+  ctx.arc(367, 305, blushRadius, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (config.accessory === "Cute Blush") {
+    // Draw cute cross stitch pattern on cheeks
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 4;
+    ctx.lineCap = "round";
+    
+    // Left cheek cross
+    ctx.beginPath();
+    ctx.moveTo(135, 300); ctx.lineTo(155, 310);
+    ctx.moveTo(155, 300); ctx.lineTo(135, 310);
+    ctx.stroke();
+
+    // Right cheek cross
+    ctx.beginPath();
+    ctx.moveTo(357, 300); ctx.lineTo(377, 310);
+    ctx.moveTo(377, 300); ctx.lineTo(357, 310);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // 2. Eyebrows
+  ctx.strokeStyle = "#5a3a29";
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+  
+  // Left eyebrow
+  ctx.beginPath();
+  ctx.arc(175, 200, 35, Math.PI * 1.15, Math.PI * 1.75);
+  ctx.stroke();
+
+  // Right eyebrow
+  ctx.beginPath();
+  ctx.arc(337, 200, 35, Math.PI * 1.25, Math.PI * 1.85);
+  ctx.stroke();
+
+  // 3. Eyes (Left & Right)
+  const drawEye = (x, isLeft) => {
+    ctx.save();
+
+    if (config.eyes === "Blinking" && isLeft) {
+      // Blinking closed eye curve
+      ctx.strokeStyle = "#2b1b11";
+      ctx.lineWidth = 10;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.arc(x, 240, 38, Math.PI * 0.1, Math.PI * 0.9);
+      ctx.stroke();
+      
+      // Eyelashes
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.moveTo(x - 28, 252);
+      ctx.lineTo(x - 40, 264);
+      ctx.moveTo(x + 28, 252);
+      ctx.lineTo(x + 40, 264);
+      ctx.stroke();
+    } else {
+      // White of eye (Sclera)
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.ellipse(x, 245, 52, 42, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "#2b1b11";
+      ctx.lineWidth = 5;
+      ctx.stroke();
+
+      // Iris (Dynamic colors based on config.contacts)
+      let irisColor = "#2b1b11";
+      if (config.contacts === "Blue Ring") irisColor = "#00f2fe";
+      else if (config.contacts === "Purple Glow") irisColor = "#b624ff";
+      else if (config.contacts === "Cat Eye Gold") irisColor = "#feda00";
+
+      ctx.fillStyle = irisColor;
+      ctx.beginPath();
+      ctx.ellipse(x, 245, 38, 38, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Pupil (Cat slit for Cat Eyes, round pupil for other eye shapes)
+      ctx.fillStyle = "#160e0a";
+      ctx.beginPath();
+      if (config.eyes === "Cat Eyes") {
+        // Feline vertical slit pupil
+        ctx.ellipse(x, 245, 9, 26, 0, 0, Math.PI * 2);
+      } else {
+        ctx.ellipse(x, 245, 22, 22, 0, 0, Math.PI * 2);
+      }
+      ctx.fill();
+
+      // Sparkles/Highlights (Glossy doll eyes look)
+      ctx.fillStyle = "#ffffff";
+      if (config.eyes === "Sparkling") {
+        // Draw a distinct cute white heart highlight inside the eye
+        ctx.save();
+        ctx.translate(x, 245);
+        ctx.beginPath();
+        // Heart drawing path centered at eye iris
+        const drawHeart = (cx, cy, w) => {
+          ctx.beginPath();
+          ctx.moveTo(cx, cy - w * 0.2);
+          ctx.bezierCurveTo(cx - w * 0.5, cy - w * 0.7, cx - w * 0.9, cy - w * 0.3, cx - w * 0.9, cy + w * 0.15);
+          ctx.bezierCurveTo(cx - w * 0.9, cy + w * 0.65, cx, cy + w * 1.1, cx, cy + w * 1.25);
+          ctx.bezierCurveTo(cx, cy + w * 1.1, cx + w * 0.9, cy + w * 0.65, cx + w * 0.9, cy + w * 0.15);
+          ctx.bezierCurveTo(cx + w * 0.9, cy - w * 0.3, cx + w * 0.5, cy - w * 0.7, cx, cy - w * 0.2);
+          ctx.closePath();
+          ctx.fill();
+        };
+        // Draw main heart highlight
+        drawHeart(-10, -10, 16);
+        // Add a small sub-sparkle dot
+        ctx.beginPath();
+        ctx.arc(14, 14, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      } else {
+        ctx.beginPath();
+        ctx.arc(x - 12, 232, 12, 0, Math.PI * 2);
+        ctx.arc(x + 12, 255, 5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Eyelashes & Upper Lid Line (Tilt eyelashes upwards for Cat Eyes to give Feline look)
+      ctx.strokeStyle = "#2b1b11";
+      ctx.lineWidth = 9;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      if (config.eyes === "Cat Eyes") {
+        // Cat eyes upper wing stroke
+        ctx.moveTo(x - 46, 238);
+        ctx.quadraticCurveTo(x, 218, x + 46, 230);
+        ctx.lineTo(x + 56, 218); // Feline winged eyeliner tip
+        ctx.stroke();
+      } else {
+        ctx.arc(x, 243, 44, Math.PI * 1.12, Math.PI * 1.88);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+  };
+
+  drawEye(175, true);
+  drawEye(337, false);
+
+  // 4. Nose (Cute human-doll nose shadow/tip)
+  ctx.fillStyle = "#e593a4";
+  ctx.beginPath();
+  ctx.arc(256, 288, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 5. Mouth (Cute pink lips)
+  ctx.strokeStyle = "#2b1b11";
+  ctx.lineWidth = 7;
+  ctx.lineCap = "round";
+  ctx.fillStyle = "#ff5d84";
+
+  if (config.mouth === "Surprised") {
+    ctx.beginPath();
+    ctx.arc(256, 340, 16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  } else if (config.mouth === "Whistling") {
+    ctx.beginPath();
+    ctx.arc(256, 340, 9, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (config.mouth === "Cool Smirk") {
+    ctx.beginPath();
+    ctx.arc(264, 335, 22, Math.PI * 0.1, Math.PI * 0.8);
+    ctx.stroke();
+  } else {
+    // Normal Smile
+    ctx.beginPath();
+    ctx.arc(256, 330, 26, Math.PI * 0.1, Math.PI * 0.9);
+    ctx.stroke();
+  }
+
+  return new THREE.CanvasTexture(canvas);
+}
+
+function build3DCharacter(config) {
+  const group = new THREE.Group();
+
+  const skinColor = 0xffebdb;
+  const skinMat = get3DMaterial(skinColor, 0.9, 0.05);
+  const noseMat = get3DMaterial(0xffb3ba, 0.8, 0.1);
+  const eyeMat = get3DMaterial(0x2d221c, 0.4, 0.1);
+  const highlightMat = get3DMaterial(0xffffff, 0.2, 0.1);
+  const blushMat = get3DMaterial(0xff7da7, 0.9, 0.0, true, 0.7);
+
+  // Human Torso - Beautifully unified and smooth single-body flow
+  const torsoGroup = new THREE.Group();
+  
+  // Pelvis / Lower body
+  const pelvisGeom = new THREE.SphereGeometry(0.37, 32, 16);
+  pelvisGeom.scale(1.02, 0.9, 0.95);
+  const pelvis = new THREE.Mesh(pelvisGeom, skinMat);
+  pelvis.position.set(0, -0.3, 0);
+  torsoGroup.add(pelvis);
+
+  // Chest / Upper body (Smooth shoulder slope)
+  const chestGeom = new THREE.SphereGeometry(0.34, 32, 16);
+  chestGeom.scale(1.05, 0.85, 0.92);
+  const chest = new THREE.Mesh(chestGeom, skinMat);
+  chest.position.set(0, 0.12, 0);
+  torsoGroup.add(chest);
+
+  // Waist connector (Blends pelvis and chest into a seamless curve)
+  const waistGeom = new THREE.CylinderGeometry(0.31, 0.36, 0.42, 32);
+  const waist = new THREE.Mesh(waistGeom, skinMat);
+  waist.position.set(0, -0.09, 0);
+  torsoGroup.add(waist);
+
+  group.add(torsoGroup);
+
+  // Neck (Seamlessly anchored inside the chest)
+  const neckGeom = new THREE.CylinderGeometry(0.11, 0.125, 0.28, 16);
+  const neck = new THREE.Mesh(neckGeom, skinMat);
+  neck.position.set(0, 0.40, 0);
+  group.add(neck);
+
+  // Head
+  const headGeom = new THREE.SphereGeometry(0.68, 32, 32);
+  headGeom.scale(1.05, 1.04, 1.0);
+  const head = new THREE.Mesh(headGeom, skinMat);
+  head.position.y = 0.98;
+  group.add(head);
+
+  // Ears - Positioned slightly further out and forward to sit naturally outside hair
+  const leftEarGeom = new THREE.SphereGeometry(0.14, 16, 16);
+  leftEarGeom.scale(0.6, 1.0, 0.8);
+  const leftEar = new THREE.Mesh(leftEarGeom, skinMat);
+  leftEar.position.set(-0.73, 0.98, 0.06);
+  leftEar.rotation.y = 0.25;
+  group.add(leftEar);
+
+  const rightEar = leftEar.clone();
+  rightEar.position.x = 0.73;
+  rightEar.rotation.y = -0.25;
+  group.add(rightEar);
+
+  // High Fidelity Human Faceplate (Dynamic Canvas Texture mapping)
+  const faceTex = createFaceTexture(config);
+  faceTex.needsUpdate = true;
+  
+  // Curved sphere segment mapped exactly on the front face of the head
+  const faceGeom = new THREE.SphereGeometry(0.685, 32, 16, Math.PI * 0.15, Math.PI * 0.7, Math.PI * 0.25, Math.PI * 0.5);
+  faceGeom.scale(1.052, 1.042, 1.002); // matches head scales
+  const faceMat = new THREE.MeshBasicMaterial({
+    map: faceTex,
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide
+  });
+  const facePlane = new THREE.Mesh(faceGeom, faceMat);
+  facePlane.position.set(0, 0.98, 0.08); // Centered and pushed forward to avoid clipping
+  group.add(facePlane);
+
+  // Smooth Human Arms (Seamlessly connected to the torso chest sides)
+  const leftArmGroup = new THREE.Group();
+  leftArmGroup.position.set(-0.32, 0.12, 0); // Anchored on the left side (-0.32) and moved inward for seamless torso connection
+  
+  const armGeom = new THREE.CylinderGeometry(0.08, 0.075, 0.65, 16);
+  const armMesh = new THREE.Mesh(armGeom, skinMat);
+  armMesh.position.y = -0.3;
+  leftArmGroup.add(armMesh);
+  
+  // Shoulder joint cap for smooth connection
+  const shoulderGeom = new THREE.SphereGeometry(0.095, 16, 16);
+  const leftShoulder = new THREE.Mesh(shoulderGeom, skinMat);
+  leftShoulder.position.set(0, 0.02, 0);
+  leftArmGroup.add(leftShoulder);
+  
+  const handGeom = new THREE.SphereGeometry(0.09, 16, 16);
+  const leftHand = new THREE.Mesh(handGeom, skinMat);
+  leftHand.position.y = -0.62;
+  leftArmGroup.add(leftHand);
+
+  leftArmGroup.rotation.z = -0.22; // Rotated outward to prevent clipping through body
+  group.add(leftArmGroup);
+
+  const rightArmGroup = new THREE.Group();
+  rightArmGroup.position.set(0.32, 0.12, 0); // Anchored on the right side (0.32) and moved inward for seamless torso connection
+
+  const rightArmMesh = armMesh.clone();
+  rightArmGroup.add(rightArmMesh);
+
+  // Right shoulder cap
+  const rightShoulder = leftShoulder.clone();
+  rightArmGroup.add(rightShoulder);
+
+  const rightHand = leftHand.clone();
+  rightArmGroup.add(rightHand);
+
+  rightArmGroup.rotation.z = 0.22; // Rotated outward to prevent clipping through body
+  group.add(rightArmGroup);
+
+  // Smooth Human Legs (No wooden joint balls)
+  const leftLegGroup = new THREE.Group();
+  leftLegGroup.position.set(-0.18, -0.38, 0);
+
+  const legGeom = new THREE.CylinderGeometry(0.15, 0.11, 0.8, 16);
+  const legMesh = new THREE.Mesh(legGeom, skinMat);
+  legMesh.position.y = -0.4;
+  leftLegGroup.add(legMesh);
+
+  // Hide skin leg cylinder under full-length pants to prevent any clipping/bleeding
+  if (config.bottom === "Cargo Pants Black" || config.bottom === "Wide Slacks") {
+    legMesh.visible = false;
+  }
+
+  const footGeom = new THREE.BoxGeometry(0.14, 0.1, 0.24);
+  const leftFoot = new THREE.Mesh(footGeom, skinMat);
+  leftFoot.position.set(0, -0.82, 0.04);
+  leftLegGroup.add(leftFoot);
+
+  leftLegGroup.rotation.z = -0.02;
+  group.add(leftLegGroup);
+
+  const rightLegGroup = new THREE.Group();
+  rightLegGroup.position.set(0.18, -0.38, 0);
+
+  const rightLegMesh = legMesh.clone();
+  rightLegGroup.add(rightLegMesh);
+
+  const rightFoot = leftFoot.clone();
+  rightLegGroup.add(rightFoot);
+
+  rightLegGroup.rotation.z = 0.02;
+  group.add(rightLegGroup);
+
+  // Clothing - Top (Neat and clean fit, no skin gaps)
+  if (config.top !== "None") {
+    let topColor = 0x3b82f6;
+    let isHoodie = false;
+    if (config.top === "Hoodie Grey") { topColor = 0x888888; isHoodie = true; }
+    else if (config.top === "Leather Jacket") topColor = 0x3a2010;
+    else if (config.top === "Crop Top Neon") topColor = 0x39ff14;
+
+    const topMat = get3DMaterial(topColor, 0.8, 0.1);
+    
+    // Shirt wrapping chest, waist, and overlapping pelvis
+    const shirtGeom = new THREE.CylinderGeometry(0.36, 0.38, 0.66, 32);
+    const shirt = new THREE.Mesh(shirtGeom, topMat);
+    shirt.position.y = -0.05; // Placed to cover body waist and overlap pants perfectly
+    group.add(shirt);
+
+    // Neat collar ring
+    const collarGeom = new THREE.TorusGeometry(0.14, 0.03, 8, 24);
+    const collar = new THREE.Mesh(collarGeom, topMat);
+    collar.position.set(0, 0.28, 0);
+    collar.rotation.x = Math.PI / 2;
+    group.add(collar);
+
+    // Sleeves covering upper arms and shoulder joint smoothly
+    const sleeveGeom = new THREE.CylinderGeometry(0.105, 0.095, 0.38, 16);
+    const leftSleeve = new THREE.Mesh(sleeveGeom, topMat);
+    leftSleeve.position.y = -0.19; // Positioned closer to shoulder
+    leftArmGroup.add(leftSleeve);
+
+    // Shoulder caps to cover the shoulder joint naturally with clothing
+    const shoulderCapGeom = new THREE.SphereGeometry(0.102, 16, 16);
+    const leftShoulderCap = new THREE.Mesh(shoulderCapGeom, topMat);
+    leftShoulderCap.position.set(0, 0.02, 0);
+    leftArmGroup.add(leftShoulderCap);
+
+    const rightSleeve = leftSleeve.clone();
+    rightArmGroup.add(rightSleeve);
+
+    const rightShoulderCap = leftShoulderCap.clone();
+    rightArmGroup.add(rightShoulderCap);
+
+    if (isHoodie) {
+      const hoodGeom = new THREE.SphereGeometry(0.36, 16, 16);
+      const hood = new THREE.Mesh(hoodGeom, topMat);
+      hood.position.set(0, 0.32, -0.28);
+      group.add(hood);
+    }
+  }
+
+  // Clothing - Bottom (Overlap shirt cleanly)
+  if (config.bottom !== "None") {
+    let bottomColor = 0x2563eb;
+    if (config.bottom === "Cargo Pants Black") bottomColor = 0x111111;
+    else if (config.bottom === "Denim Skirt") bottomColor = 0x4f46e5;
+    else if (config.bottom === "Wide Slacks") bottomColor = 0xd7ccc8;
+
+    const bottomMat = get3DMaterial(bottomColor, 0.8, 0.1);
+    
+    // Pants seat covering pelvis and overlapping waist (Adjusted height and size to prevent crotch gaps)
+    const seatGeom = new THREE.CylinderGeometry(0.38, 0.34, 0.20, 32);
+    const seat = new THREE.Mesh(seatGeom, bottomMat);
+    seat.position.y = -0.52; // Lowered further to completely avoid overlapping with the shirt
+    group.add(seat);
+
+    // Crotch cover to ensure no skin/gap is shown between legs
+    const crotchGeom = new THREE.SphereGeometry(0.24, 16, 16);
+    crotchGeom.scale(1.1, 0.8, 1.1);
+    const crotchCover = new THREE.Mesh(crotchGeom, bottomMat);
+    crotchCover.position.set(0, -0.58, 0); // Lowered to align with the seat mesh
+    group.add(crotchCover);
+
+    // Pants leg covering thigh
+    if (config.bottom === "Cargo Pants Black" || config.bottom === "Wide Slacks") {
+      const trouserLegGeom = new THREE.CylinderGeometry(0.18, 0.155, 0.78, 16);
+      const leftTrouser = new THREE.Mesh(trouserLegGeom, bottomMat);
+      leftTrouser.position.y = -0.4;
+      leftLegGroup.add(leftTrouser);
+
+      const rightTrouser = leftTrouser.clone();
+      rightLegGroup.add(rightTrouser);
+    } else if (config.bottom === "Denim Skirt") {
+      // Skirt geometry wrapping thighs (longer length)
+      const skirtGeom = new THREE.CylinderGeometry(0.40, 0.46, 0.46, 32, 1, true);
+      const skirt = new THREE.Mesh(skirtGeom, bottomMat);
+      skirt.position.y = -0.58; // Lowered to align with the seat mesh
+      group.add(skirt);
+    } else {
+      // Default Base Shorts (longer length for a proper short pants look)
+      const trouserLegGeom = new THREE.CylinderGeometry(0.175, 0.155, 0.38, 16);
+      const leftTrouser = new THREE.Mesh(trouserLegGeom, bottomMat);
+      leftTrouser.position.y = -0.34; // Lowered to align with the seat mesh
+      leftLegGroup.add(leftTrouser);
+
+      const rightTrouser = leftTrouser.clone();
+      rightLegGroup.add(rightTrouser);
+    }
+  }
+
+  // Shoes
+  let shoeColor = 0xffffff;
+  if (config.shoes === "Chunky Boots") shoeColor = 0x222222;
+  else if (config.shoes === "High Heels Red") shoeColor = 0xef4444;
+
+  const shoeMat = get3DMaterial(shoeColor, 0.6, 0.2);
+  const shoeGeom = new THREE.SphereGeometry(0.14, 16, 16);
+  shoeGeom.scale(1.1, 0.85, 1.6);
+
+  const leftShoe = new THREE.Mesh(shoeGeom, shoeMat);
+  leftShoe.position.set(0, -1.02, 0.05);
+  leftLegGroup.add(leftShoe);
+
+  const rightShoe = leftShoe.clone();
+  rightShoe.position.set(0, -1.02, 0.05);
+  rightLegGroup.add(rightShoe);
+
+  // Accessories
+  if (config.accessory && config.accessory !== "None") {
+    if (config.accessory === "Cool Sunglasses") {
+      const glassesGroup = new THREE.Group();
+      // Positioned on the face as actual spectacles
+      glassesGroup.position.set(0, 1.02, 0.64);
+
+      const glassGeom = new THREE.BoxGeometry(0.26, 0.14, 0.02);
+      const glassMat = get3DMaterial(0x111111, 0.2, 0.9);
+      
+      const leftGlass = new THREE.Mesh(glassGeom, glassMat);
+      leftGlass.position.x = -0.20;
+      glassesGroup.add(leftGlass);
+
+      const rightGlass = leftGlass.clone();
+      rightGlass.position.x = 0.20;
+      glassesGroup.add(rightGlass);
+
+      const bridgeGeom = new THREE.BoxGeometry(0.16, 0.03, 0.02);
+      const bridge = new THREE.Mesh(bridgeGeom, get3DMaterial(0xcccccc, 0.2, 0.9));
+      bridge.position.y = 0.02;
+      glassesGroup.add(bridge);
+
+      // Spectacle Temples (Glasses sides extending back to the ears)
+      const templeGeom = new THREE.BoxGeometry(0.02, 0.02, 0.64);
+      const templeMat = get3DMaterial(0x111111, 0.2, 0.9);
+      
+      const leftTemple = new THREE.Mesh(templeGeom, templeMat);
+      leftTemple.position.set(-0.33, 0.02, -0.32);
+      glassesGroup.add(leftTemple);
+
+      const rightTemple = leftTemple.clone();
+      rightTemple.position.x = 0.33;
+      glassesGroup.add(rightTemple);
+
+      group.add(glassesGroup);
+    } else if (config.accessory === "Cyber Visor") {
+      const visorGeom = new THREE.CylinderGeometry(0.72, 0.72, 0.18, 32, 1, true, -Math.PI*0.4, Math.PI*0.8);
+      const visorMat = new THREE.MeshStandardMaterial({
+        color: 0xff007f,
+        roughness: 0.1,
+        metalness: 0.9,
+        transparent: true,
+        opacity: 0.8,
+        side: THREE.DoubleSide
+      });
+      const visor = new THREE.Mesh(visorGeom, visorMat);
+      visor.position.set(0, 1.02, 0.04);
+      group.add(visor);
+    }
+  }
+
+  // Hair
+  if (config.hair && config.hair !== "None") {
+    let hairColor = 0x1a1a1a; // Default to Short Black (Rich black)
+    if (config.hair === "Long Blonde") hairColor = 0xffd54f;
+    else if (config.hair === "Curly Brown") hairColor = 0x5d4037;
+    else if (config.hair === "Hip Pink") hairColor = 0xff3385;
+
+    const hairMat = get3DMaterial(hairColor, 0.9, 0.05);
+
+    if (config.hair === "Short Black") {
+      // 1. Short Black (단정한 흑발) - Back and top coverage only, leaving the face area open
+      const hairCapGeom = new THREE.SphereGeometry(0.70, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.52);
+      hairCapGeom.scale(1.05, 1.05, 1.06);
+      const hairCap = new THREE.Mesh(hairCapGeom, hairMat);
+      hairCap.position.set(0, 0.98, -0.02);
+      hairCap.rotation.x = -0.32; // Rotated back to clear face
+      group.add(hairCap);
+
+      // Side burns aligned flush with the head curvature to avoid clipping
+      const bangGeom = new THREE.BoxGeometry(0.06, 0.28, 0.12);
+      const leftBang = new THREE.Mesh(bangGeom, hairMat);
+      leftBang.position.set(-0.64, 0.92, 0.18);
+      leftBang.rotation.set(-0.05, 0.25, -0.12);
+      group.add(leftBang);
+
+      const rightBang = leftBang.clone();
+      rightBang.position.x = 0.52;
+      rightBang.rotation.z = 0.1;
+      group.add(rightBang);
+
+      // Front bangs ending neatly above eyebrows and eyes
+      const centerBang = new THREE.BoxGeometry(0.38, 0.10, 0.1);
+      const centerBangMesh = new THREE.Mesh(centerBang, hairMat);
+      centerBangMesh.position.set(0, 1.26, 0.48);
+      group.add(centerBangMesh);
+
+    } else if (config.hair === "Long Blonde") {
+      // 2. Long Blonde (금발 생머리) - Back and top coverage only
+      const hairCapGeom = new THREE.SphereGeometry(0.71, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.54);
+      hairCapGeom.scale(1.05, 1.08, 1.05);
+      const hairCap = new THREE.Mesh(hairCapGeom, hairMat);
+      hairCap.position.set(0, 0.98, -0.02);
+      hairCap.rotation.x = -0.32; // Rotated back to clear face
+      group.add(hairCap);
+
+      // Draping back hair mesh (Full volume)
+      const drapeGeom = new THREE.CylinderGeometry(0.68, 0.76, 0.85, 24, 1, true);
+      drapeGeom.scale(1.03, 1.0, 0.85);
+      const drape = new THREE.Mesh(drapeGeom, hairMat);
+      drape.position.set(0, 0.55, -0.18);
+      group.add(drape);
+
+      // Side hair shifted outward to ensure cheeks and eyes are visible
+      const cheekHairGeom = new THREE.CylinderGeometry(0.12, 0.07, 0.60, 12);
+      const leftCheekHair = new THREE.Mesh(cheekHairGeom, hairMat);
+      leftCheekHair.position.set(-0.58, 0.75, 0.28);
+      leftCheekHair.rotation.z = -0.15;
+      group.add(leftCheekHair);
+
+      const rightCheekHair = leftCheekHair.clone();
+      rightCheekHair.position.x = 0.58;
+      rightCheekHair.rotation.z = 0.15;
+      group.add(rightCheekHair);
+
+      // Front bangs ending neatly above eyebrows and eyes
+      const frontBangsGeom = new THREE.SphereGeometry(0.24, 16, 16);
+      frontBangsGeom.scale(1.3, 0.40, 0.5);
+      const frontBangs = new THREE.Mesh(frontBangsGeom, hairMat);
+      frontBangs.position.set(0, 1.28, 0.44);
+      group.add(frontBangs);
+
+    } else if (config.hair === "Curly Brown") {
+      // 3. Curly Brown (브라운 펌헤어) - Back and top coverage only
+      const baseScalpGeom = new THREE.SphereGeometry(0.70, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.54);
+      baseScalpGeom.scale(1.05, 1.06, 1.05);
+      const baseScalp = new THREE.Mesh(baseScalpGeom, hairMat);
+      baseScalp.position.set(0, 0.98, -0.02);
+      baseScalp.rotation.x = -0.32; // Rotated back to clear face
+      group.add(baseScalp);
+
+      // Curls positioned on top, sides, and back (leaving forehead clear)
+      const curlGeom = new THREE.SphereGeometry(0.23, 16, 16);
+      const curls = [
+        [-0.45, 1.36, 0.12], [0.45, 1.36, 0.12],
+        [-0.58, 1.15, 0.18], [0.58, 1.15, 0.18],
+        [-0.32, 1.50, 0.05], [0.32, 1.50, 0.05],
+        [0, 1.52, -0.08], [-0.55, 0.96, 0.05], [0.55, 0.96, 0.05],
+        [-0.30, 1.48, -0.15], [0.30, 1.48, -0.15]
+      ];
+      curls.forEach(pos => {
+        const curl = new THREE.Mesh(curlGeom, hairMat);
+        curl.position.set(pos[0], pos[1], pos[2]);
+        group.add(curl);
+      });
+
+      // Front curls ending neatly above eyebrows and eyes
+      const frontCurlGeom = new THREE.SphereGeometry(0.15, 16, 16);
+      const leftFrontCurl = new THREE.Mesh(frontCurlGeom, hairMat);
+      leftFrontCurl.position.set(-0.18, 1.30, 0.40);
+      group.add(leftFrontCurl);
+
+      const rightFrontCurl = leftFrontCurl.clone();
+      rightFrontCurl.position.x = 0.18;
+      group.add(rightFrontCurl);
+
+    } else if (config.hair === "Hip Pink") {
+      // 4. Hip Pink (핑크 리본 단발) - Back and top coverage only
+      const bobBaseGeom = new THREE.SphereGeometry(0.70, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.54);
+      bobBaseGeom.scale(1.04, 1.06, 1.04);
+      const bobBase = new THREE.Mesh(bobBaseGeom, hairMat);
+      bobBase.position.set(0, 0.99, -0.04);
+      bobBase.rotation.x = -0.32; // Rotated back to clear face
+      group.add(bobBase);
+
+      // Tucked side flaps
+      const flapGeom = new THREE.CylinderGeometry(0.14, 0.08, 0.42, 16);
+      const leftFlap = new THREE.Mesh(flapGeom, hairMat);
+      leftFlap.position.set(-0.56, 0.85, 0.22);
+      leftFlap.rotation.z = -0.15;
+      group.add(leftFlap);
+
+      const rightFlap = leftFlap.clone();
+      rightFlap.position.x = 0.56;
+      rightFlap.rotation.z = 0.15;
+      group.add(rightFlap);
+
+      // Front bangs ending neatly above eyebrows and eyes
+      const miniBangGeom = new THREE.BoxGeometry(0.22, 0.09, 0.10);
+      const leftMini = new THREE.Mesh(miniBangGeom, hairMat);
+      leftMini.position.set(-0.16, 1.28, 0.40);
+      leftMini.rotation.z = -0.2;
+      group.add(leftMini);
+
+      const rightMini = leftMini.clone();
+      rightMini.position.x = 0.16;
+      rightMini.rotation.z = 0.2;
+      group.add(rightMini);
+
+      const bunGeom = new THREE.SphereGeometry(0.18, 16, 16);
+      const leftBun = new THREE.Mesh(bunGeom, hairMat);
+      leftBun.position.set(-0.62, 1.28, 0.08);
+      group.add(leftBun);
+
+      const rightBun = leftBun.clone();
+      rightBun.position.x = 0.62;
+      group.add(rightBun);
+    }
+  }
+
+  // Headwear & Crowns
+  if (config.headwear && config.headwear !== "None") {
+    if (config.headwear === "Beanie Hat") {
+      const hatGeom = new THREE.CylinderGeometry(0.3, 0.52, 0.38, 16);
+      const hatMat = get3DMaterial(0xff3366, 0.9, 0.05);
+      const hat = new THREE.Mesh(hatGeom, hatMat);
+      hat.position.set(0, 1.52, 0.04);
+      hat.rotation.x = -0.15;
+      group.add(hat);
+
+      const pomGeom = new THREE.SphereGeometry(0.09, 12, 12);
+      const pom = new THREE.Mesh(pomGeom, get3DMaterial(0xffffff, 0.9, 0));
+      pom.position.set(0, 1.73, -0.04);
+      group.add(pom);
+    } else if (config.headwear === "Ribbon Headband") {
+      const headbandGeom = new THREE.TorusGeometry(0.72, 0.04, 8, 32, Math.PI);
+      const redMat = get3DMaterial(0xef4444, 0.8, 0.1);
+      const band = new THREE.Mesh(headbandGeom, redMat);
+      band.position.set(0, 1.06, 0.04);
+      band.rotation.x = Math.PI / 2.2;
+      group.add(band);
+
+      const ribbonGroup = new THREE.Group();
+      ribbonGroup.position.set(0.28, 1.65, 0.08);
+      ribbonGroup.rotation.z = -0.3;
+      
+      const coneGeom = new THREE.ConeGeometry(0.12, 0.22, 4);
+      coneGeom.rotateZ(Math.PI / 2);
+      
+      const leftRibbon = new THREE.Mesh(coneGeom, redMat);
+      leftRibbon.position.x = -0.11;
+      ribbonGroup.add(leftRibbon);
+      
+      const rightRibbon = leftRibbon.clone();
+      rightRibbon.position.x = 0.11;
+      rightRibbon.rotation.y = Math.PI;
+      ribbonGroup.add(rightRibbon);
+      
+      const knot = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), get3DMaterial(0xffffff, 0.8, 0));
+      ribbonGroup.add(knot);
+
+      group.add(ribbonGroup);
+    } else if (config.headwear === "Earphones") {
+      const phoneGroup = new THREE.Group();
+      phoneGroup.position.set(0, 0.96, 0.04);
+      
+      const bandGeom = new THREE.TorusGeometry(0.68, 0.025, 8, 32, Math.PI);
+      const blackMat = get3DMaterial(0x111111, 0.4, 0.8);
+      const neonPinkMat = get3DMaterial(0xff2a85, 0.3, 0.7);
+      
+      const band = new THREE.Mesh(bandGeom, blackMat);
+      band.rotation.x = Math.PI / 2;
+      phoneGroup.add(band);
+
+      const speakerGeom = new THREE.CylinderGeometry(0.18, 0.18, 0.09, 16);
+      speakerGeom.rotateZ(Math.PI / 2);
+      
+      const leftSp = new THREE.Mesh(speakerGeom, blackMat);
+      leftSp.position.x = -0.63;
+      
+      const leftRing = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.02, 8, 16), neonPinkMat);
+      leftRing.position.set(-0.68, 0, 0);
+      leftRing.rotation.y = Math.PI / 2;
+      phoneGroup.add(leftSp);
+      phoneGroup.add(leftRing);
+
+      const rightSp = leftSp.clone();
+      rightSp.position.x = 0.63;
+      const rightRing = leftRing.clone();
+      rightRing.position.x = 0.68;
+      phoneGroup.add(rightSp);
+      phoneGroup.add(rightRing);
+
+      group.add(phoneGroup);
+    }
+  }
+
+  if (config.crown && config.crown !== "None") {
+    const crownGroup = new THREE.Group();
+    crownGroup.position.set(0, 1.56, 0);
+
+    if (config.crown === "Golden Crown") {
+      const crownMat = get3DMaterial(0xffd700, 0.2, 0.9);
+      const baseGeom = new THREE.CylinderGeometry(0.24, 0.2, 0.12, 16, 1, true);
+      const base = new THREE.Mesh(baseGeom, crownMat);
+      crownGroup.add(base);
+
+      for (let i = 0; i < 5; i++) {
+        const angle = (i / 5) * Math.PI * 2;
+        const pt = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.14, 4), crownMat);
+        pt.position.set(Math.cos(angle) * 0.22, 0.12, Math.sin(angle) * 0.22);
+        pt.rotation.y = -angle;
+        crownGroup.add(pt);
+      }
+    } else if (config.crown === "Ice Tiara") {
+      const tiaraMat = get3DMaterial(0xa0e0ff, 0.1, 0.9, true, 0.7);
+      const tiaraGeom = new THREE.TorusGeometry(0.22, 0.022, 8, 16, Math.PI);
+      const tiara = new THREE.Mesh(tiaraGeom, tiaraMat);
+      tiara.rotation.x = Math.PI / 2;
+      crownGroup.add(tiara);
+
+      for (let i = 0; i < 5; i++) {
+        const spike = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.11, 4), tiaraMat);
+        const angle = (i / 4) * Math.PI - Math.PI/2;
+        spike.position.set(Math.sin(angle) * 0.22, 0.06, Math.cos(angle) * 0.04);
+        crownGroup.add(spike);
+      }
+    } else if (config.crown === "Flower Wreath") {
+      const greenMat = get3DMaterial(0x4caf50, 0.9, 0.0);
+      const flowerMat = get3DMaterial(0xff8bc3, 0.8, 0.0);
+      const coreMat = get3DMaterial(0xffeb3b, 0.8, 0.0);
+
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.022, 8, 32), greenMat);
+      ring.rotation.x = Math.PI / 2;
+      crownGroup.add(ring);
+
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const fl = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 8), flowerMat);
+        fl.position.set(Math.cos(angle) * 0.28, 0.015, Math.sin(angle) * 0.28);
+        crownGroup.add(fl);
+        
+        const core = new THREE.Mesh(new THREE.SphereGeometry(0.02, 8, 8), coreMat);
+        core.position.set(Math.cos(angle) * 0.28, 0.038, Math.sin(angle) * 0.28);
+        crownGroup.add(core);
+      }
+    }
+    group.add(crownGroup);
+  }
+
+  // Back items
+  if (config.back && config.back !== "None") {
+    if (config.back === "Angel Wings") {
+      const wingMat = get3DMaterial(0xffffff, 0.9, 0.0);
+      const wingGeom = new THREE.BoxGeometry(0.6, 0.22, 0.03);
+      
+      const leftWing = new THREE.Mesh(wingGeom, wingMat);
+      leftWing.position.set(-0.45, 0.0, -0.45);
+      leftWing.rotation.set(0.1, -0.3, 0.2);
+      group.add(leftWing);
+
+      const rightWing = leftWing.clone();
+      rightWing.position.x = 0.45;
+      rightWing.rotation.set(0.1, 0.3, -0.2);
+      group.add(rightWing);
+    } else if (config.back === "Neon Boosters") {
+      const packMat = get3DMaterial(0x111111, 0.3, 0.9);
+      const neonMat = get3DMaterial(0x00f2fe, 0.2, 0.9);
+
+      const pack = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.45, 0.26), packMat);
+      pack.position.set(0, 0.0, -0.45);
+      group.add(pack);
+
+      const thrusterL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.38, 12), neonMat);
+      thrusterL.position.set(-0.12, -0.22, -0.6);
+      group.add(thrusterL);
+
+      const thrusterR = thrusterL.clone();
+      thrusterR.position.x = 0.12;
+      group.add(thrusterR);
+    } else if (config.back === "School Backpack") {
+      const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.42, 0.24), get3DMaterial(0xffeb3b, 0.9, 0.0));
+      backpack.position.set(0, 0.0, -0.4);
+      group.add(backpack);
+
+      const pocket = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 0.06), get3DMaterial(0xff7da7, 0.9, 0.0));
+      pocket.position.set(0, -0.09, -0.54);
+      group.add(pocket);
+    }
+  }
+
+  // Hand item
+  if (config.hand && config.hand !== "None") {
+    if (config.hand === "Bubble Tea") {
+      const cupGeom = new THREE.CylinderGeometry(0.08, 0.06, 0.18, 16);
+      const bobaMat = get3DMaterial(0xffcc80, 0.5, 0.1);
+      const boba = new THREE.Mesh(cupGeom, bobaMat);
+      boba.position.set(0.08, -0.42, 0.14);
+      
+      const straw = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.22, 8), get3DMaterial(0x9c27b0, 0.9, 0));
+      straw.position.set(0.08, -0.34, 0.14);
+      straw.rotation.z = 0.2;
+      
+      rightArmGroup.add(boba);
+      rightArmGroup.add(straw);
+    } else if (config.hand === "Holding Mic") {
+      const micGroup = new THREE.Group();
+      micGroup.position.set(0.08, -0.38, 0.14);
+      micGroup.rotation.x = Math.PI / 3;
+
+      const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.16, 8), get3DMaterial(0x222222, 0.8, 0));
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 12), get3DMaterial(0xffd700, 0.2, 0.9));
+      head.position.y = 0.08;
+
+      micGroup.add(handle);
+      micGroup.add(head);
+      rightArmGroup.add(micGroup);
+    } else if (config.hand === "V Sign Sparkle") {
+      const sparkleMat = get3DMaterial(0xffeb3b, 0.1, 0.9);
+      const star = new THREE.Mesh(new THREE.OctahedronGeometry(0.09, 0), sparkleMat);
+      star.position.set(0.12, -0.38, 0.15);
+      
+      rightArmGroup.add(star);
+    }
+  }
+
+  group.scale.set(0.8, 0.8, 0.8);
+  return group;
+}
+
+function init3DScene(container, viewer, isProfile = false) {
+  if (viewer.reqId) cancelAnimationFrame(viewer.reqId);
+  container.innerHTML = "";
+
+  const width = container.clientWidth || (isProfile ? 80 : 320);
+  const height = container.clientHeight || (isProfile ? 80 : 280);
+
+  viewer.scene = new THREE.Scene();
+
+  viewer.camera = new THREE.PerspectiveCamera(isProfile ? 40 : 45, width / height, 0.1, 100);
+  // Raised camera y to 0.45 to center the head/hair perfectly in the viewport
+  viewer.camera.position.set(0, 0.45, isProfile ? 4.5 : 4.6);
+
+  viewer.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  viewer.renderer.setSize(width, height);
+  viewer.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(viewer.renderer.domElement);
+
+  const ambientLight = new THREE.AmbientLight(0xfff5f0, 0.85);
+  viewer.scene.add(ambientLight);
+
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+  dirLight.position.set(5, 8, 5);
+  viewer.scene.add(dirLight);
+
+  const backLight = new THREE.DirectionalLight(0xffe0d0, 0.45);
+  backLight.position.set(-5, 3, -5);
+  viewer.scene.add(backLight);
+
+  viewer.character = build3DCharacter(state.avatarConfig);
+  viewer.scene.add(viewer.character);
+
+  let time = 0;
+  function animate() {
+    viewer.reqId = requestAnimationFrame(animate);
+    
+    time += 0.05;
+    if (viewer.character) {
+      const breathScale = 1.0 + Math.sin(time) * 0.02;
+      viewer.character.scale.set(0.8, 0.8 * breathScale, 0.8);
+      viewer.character.position.y = Math.sin(time * 0.7) * 0.03;
+      
+      // Rotate head smoothly (includes hair/accessories attached to head or at y > 0.7)
+      viewer.character.children.forEach(child => {
+        if (child.position && child.position.y > 0.7) {
+          child.rotation.y = Math.sin(time * 0.5) * 0.05;
+        }
+      });
+    }
+    
+    viewer.renderer.render(viewer.scene, viewer.camera);
+  }
+  animate();
+}
+
+function updateAvatar3DCharacter() {
+  if (canvasViewer.scene && canvasViewer.character) {
+    const currentRotY = canvasViewer.character.rotation.y;
+    const currentRotX = canvasViewer.character.rotation.x;
+    canvasViewer.scene.remove(canvasViewer.character);
+    canvasViewer.character = build3DCharacter(state.avatarConfig);
+    canvasViewer.character.rotation.y = currentRotY;
+    canvasViewer.character.rotation.x = currentRotX;
+    canvasViewer.scene.add(canvasViewer.character);
+  } else {
+    const container = document.getElementById("avatar-display-canvas");
+    if (container) {
+      init3DScene(container, canvasViewer, false);
+    }
+  }
+
+  if (profileViewer.scene && profileViewer.character) {
+    const currentRotY = profileViewer.character.rotation.y;
+    profileViewer.scene.remove(profileViewer.character);
+    profileViewer.character = build3DCharacter(state.avatarConfig);
+    profileViewer.character.rotation.y = currentRotY;
+    profileViewer.scene.add(profileViewer.character);
+  } else {
+    const profileContainer = document.getElementById("profile-avatar-render");
+    if (profileContainer) {
+      init3DScene(profileContainer, profileViewer, true);
+    }
+  }
+}
 
 function updateAvatarDisplays() {
-  const container = document.getElementById("avatar-display-canvas");
-  if (container) {
-    container.innerHTML = generateAvatarSVG(state.avatarConfig);
-    setupAvatar3DRotationCue(container);
-    updateAvatarRotation();
+  if (typeof THREE !== "undefined") {
+    updateAvatar3DCharacter();
+    const container = document.getElementById("avatar-display-canvas");
+    if (container) {
+      setupAvatar3DRotationCue(container);
+    }
+  } else {
+    // Fallback to SVG if Three.js fails to load
+    const container = document.getElementById("avatar-display-canvas");
+    if (container) {
+      container.innerHTML = generateAvatarSVG(state.avatarConfig);
+      setupAvatar3DRotationCue(container);
+    }
+    const profileContainer = document.getElementById("profile-avatar-render");
+    if (profileContainer) profileContainer.innerHTML = generateAvatarSVG(state.avatarConfig);
   }
-  const profileContainer = document.getElementById("profile-avatar-render");
-  if (profileContainer) profileContainer.innerHTML = generateAvatarSVG(state.avatarConfig);
 }
 
 function updateAvatarRotation() {
-  const svgContainer = document.getElementById("avatar-display-canvas");
-  if (!svgContainer) return;
-
-  // Normalize rotation angle to 0 - 360 range
-  let normalizedAngle = Math.abs(avatarRotationY) % 360;
-  
-  // Back view is active when rotated between 90 and 270 degrees
-  let isBack = (normalizedAngle > 90 && normalizedAngle < 270);
-  
-  // If the view state changed, we redraw the SVG to render front/back view
-  if (svgContainer.dataset.isBackRendered !== String(isBack)) {
-    svgContainer.dataset.isBackRendered = String(isBack);
-    svgContainer.innerHTML = generateAvatarSVG(state.avatarConfig, isBack);
-    setupAvatar3DRotationCue(svgContainer);
-  }
-
-  const svg = svgContainer.querySelector("svg");
-  if (svg) {
-    svg.style.transform = `perspective(600px) rotateY(${avatarRotationY}deg)`;
-  }
+  // Kept for compatibility, actual rotation is handled directly on character object
 }
 
 function setupAvatar3DRotationCue(canvas) {
@@ -558,48 +1557,49 @@ function setupAvatar3DRotation() {
   const canvas = document.getElementById("avatar-display-canvas");
   if (!canvas) return;
 
-  let isDragging = false;
-  let previousX = 0;
-
-  // Clean up any old listeners by replacing the nodes or just safely appending new ones once
   if (canvas.dataset.rotationInitialized) return;
   canvas.dataset.rotationInitialized = "true";
 
-  canvas.addEventListener("mousedown", (e) => {
+  let isDragging = false;
+  let previousX = 0;
+  let previousY = 0;
+
+  const onStart = (clientX, clientY) => {
     isDragging = true;
-    previousX = e.clientX;
+    previousX = clientX;
+    previousY = clientY;
     canvas.style.cursor = "grabbing";
-  });
+  };
 
-  canvas.addEventListener("touchstart", (e) => {
-    isDragging = true;
-    previousX = e.touches[0].clientX;
-  }, { passive: true });
-
-  document.addEventListener("mousemove", (e) => {
+  const onMove = (clientX, clientY) => {
     if (!isDragging) return;
-    const deltaX = e.clientX - previousX;
-    previousX = e.clientX;
-    avatarRotationY += deltaX * 0.9;
-    updateAvatarRotation();
-  });
+    const deltaX = clientX - previousX;
+    const deltaY = clientY - previousY;
+    previousX = clientX;
+    previousY = clientY;
 
-  document.addEventListener("touchmove", (e) => {
-    if (!isDragging) return;
-    const deltaX = e.touches[0].clientX - previousX;
-    previousX = e.touches[0].clientX;
-    avatarRotationY += deltaX * 0.9;
-    updateAvatarRotation();
-  }, { passive: true });
+    if (canvasViewer.character) {
+      canvasViewer.character.rotation.y += deltaX * 0.015;
+      canvasViewer.character.rotation.x = Math.max(-0.4, Math.min(0.4, canvasViewer.character.rotation.x + deltaY * 0.01));
+    }
+  };
 
-  document.addEventListener("mouseup", () => {
+  const onEnd = () => {
     isDragging = false;
     canvas.style.cursor = "grab";
-  });
+  };
 
-  document.addEventListener("touchend", () => {
-    isDragging = false;
-  });
+  canvas.addEventListener("mousedown", (e) => onStart(e.clientX, e.clientY));
+  document.addEventListener("mousemove", (e) => onMove(e.clientX, e.clientY));
+  document.addEventListener("mouseup", onEnd);
+
+  canvas.addEventListener("touchstart", (e) => {
+    onStart(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  document.addEventListener("touchmove", (e) => {
+    onMove(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  document.addEventListener("touchend", onEnd);
 }
 
 
@@ -1906,8 +2906,11 @@ function selectShopItem(itemId, isOwned, locked, price, category) {
     showToast("아바타 아이템이 잠겨있습니다. 민감도 랭킹을 높이세요! 🔒");
     return;
   }
-  if (isOwned) {
+  if (isOwned || itemId === "None" || price === 0) {
     state.avatarConfig[category] = itemId;
+    if (!state.boughtAvatarItems.includes(itemId)) {
+      state.boughtAvatarItems.push(itemId);
+    }
     saveState();
     updateAvatarDisplays();
     renderAvatarShop();
@@ -2141,6 +3144,7 @@ window.addEventListener("DOMContentLoaded", () => {
   loadState();
   setHomeFilter("chart", "TOP100");
   navigateTo("home");
+  updateAvatarDisplays();
 
   // Hook search triggers
   const inp = document.getElementById("search-query-input");

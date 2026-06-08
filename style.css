@@ -745,6 +745,10 @@ header {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 .avatar-viewer-box {
