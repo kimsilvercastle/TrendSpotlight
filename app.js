@@ -2063,49 +2063,31 @@ async function submitChatModalQuery() {
 
   // Display typing status
   const typingIndicatorId = "typing-" + Date.now();
-  appendModalChatMessage("bot", `<div id="${typingIndicatorId}">Gemini AI 생각 중... ⚡</div>`);
+  appendModalChatMessage("bot", `<div id="${typingIndicatorId}">로컬 AI 분석 중... ⚡</div>`);
 
-  const timeStamp = `<span style="font-size:0.6rem; color:var(--text-muted); display:block; margin-top:2px;">[Gemini 1.5 Flash 실시간 답변]</span>`;
-
-  try {
-    const response = await fetch('/api/chat', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ message: query }),
-    });
-
-    const data = await response.json();
+  setTimeout(() => {
     const indicator = document.getElementById(typingIndicatorId);
+    if (!indicator) return;
 
-    if (data.error) {
-      // Fallback if API Key is not set or server fails
-      let fallbackText = `[로컬 백엔드 서버 안내]: ${data.error}<br><br><strong>(원격 API 미구성 상태에 따른 AI 간이 시뮬레이션 답변):</strong><br>`;
-      const qLower = query.toLowerCase();
-      if (qLower.includes("안녕") || qLower.includes("반갑") || qLower.includes("하이")) {
-        fallbackText += "안녕하세요! 구글의 Gemini AI입니다. 트렌드 분석뿐만 아니라 과학, 역사, 코딩, 일상 대화 등 무엇이든 편하게 여쭤보세요!";
-      } else {
-        fallbackText += `질문하신 "${query}"에 대한 트렌드 탐색 안내입니다. 해당 토픽은 최근 SNS와 온라인 커뮤니티에서 키치한 챌린지 및 유행 요소로 뜨겁게 주목받고 있습니다.`;
-      }
+    const qLower = query.toLowerCase();
+    let reply = "";
 
-      if (indicator) {
-        indicator.parentElement.innerHTML = `${fallbackText} <span style="font-size:0.6rem; color:var(--text-muted); display:block; margin-top:2px;">[Gemini AI 로컬 가이드 모드]</span>`;
-      }
+    if (qLower.includes("두바이")) {
+      reply = "<strong>[🍫 두바이 초콜릿 트렌드]</strong><br>피스타치오 스프레드와 바삭하게 볶은 중동식 카다이프 면을 섞어 채워 넣은 초콜릿입니다. 2026년 SNS 숏폼 채널에서 소리까지 맛있는 'ASMR 초콜릿 깨기' 영상이 바이럴되며 메가 트렌드로 안착했습니다!";
+    } else if (qLower.includes("요아정")) {
+      reply = "<strong>[🍦 요아정(요거트 아이스크림의 정석) 트렌드]</strong><br>요거트 아이스크림 위에 벌집꿀, 생자몽, 초코쉘 등 본인만의 커스텀 토핑을 얹어 시켜 먹는 유행입니다. 다양한 유명인들이 최애 꿀조합 레시피를 공유하면서 인증 대란을 일으키고 있습니다.";
+    } else if (qLower.includes("이븐") || qLower.includes("최강록")) {
+      reply = "<strong>[🍳 최강록 이븐하게 익지 않았어요]</strong><br>요리 서바이벌 방송 중 요리사 최강록의 심사평 '고기가 이븐(even)하게 익지 않았어요'에서 유래된 패러디 밈입니다. 미숙하거나 밸런스가 맞지 않는 상황을 키치하고 귀엽게 빗대어 쓸 때 유행하는 문구입니다.";
+    } else if (qLower.includes("안녕") || qLower.includes("반갑") || qLower.includes("하이")) {
+      reply = "안녕하세요! 트렌드 탐색 챗봇입니다. 두바이초콜릿, 요아정, 최강록 이븐 등 유행 키워드를 저에게 물어보세요!";
     } else {
-      if (indicator) {
-        // Safe formatting for linebreaks in markdown response
-        const formattedReply = data.reply.replace(/\n/g, '<br>');
-        indicator.parentElement.innerHTML = `${formattedReply} ${timeStamp}`;
-      }
+      reply = `입력하신 "${query}"에 대한 로컬 트렌드 탐색 정보가 아직 등록되지 않았습니다.<br><strong>[추천 검색어]:</strong> 두바이초콜릿, 요아정, 최강록 이븐 밈 등을 검색해 보세요!`;
     }
-  } catch (err) {
-    console.error("Fetch Gemini API error:", err);
-    const indicator = document.getElementById(typingIndicatorId);
+
     if (indicator) {
-      indicator.parentElement.innerHTML = `서버 연결에 실패했습니다. server.js 백엔드 서버가 제대로 켜져 있는지 확인해 주세요. <span style="font-size:0.6rem; color:var(--text-muted); display:block; margin-top:2px;">[연결 에러]</span>`;
+      indicator.parentElement.innerHTML = `${reply} <span style="font-size:0.6rem; color:var(--text-muted); display:block; margin-top:2px;">[로컬 AI 분석 답변]</span>`;
     }
-  }
+  }, 600);
 }
 
 function appendModalChatMessage(sender, text) {
@@ -2192,8 +2174,6 @@ function setupDragToScroll(element) {
     element.scrollLeft = scrollLeft - walk;
   });
 }
-
-
 
 // Home filters
 function setHomeFilter(type, value) {
@@ -2319,7 +2299,8 @@ function setEraInner(e) { currentActiveFilters.eraInner = e; setHomeFilter("era"
 
 let currentFacingMode = "user";
 
-// Camera Simulator
+let currentCameraStream = null;
+
 async function startCameraSimulator() {
   const container = document.getElementById("camera-stream-box");
   if (!container) return;
@@ -2340,6 +2321,7 @@ async function startCameraSimulator() {
     } catch (e) {
       stream = await navigator.mediaDevices.getUserMedia({ video: true });
     }
+    currentCameraStream = stream;
     
     state.cameraPermGranted = true;
     saveState();
@@ -2370,23 +2352,95 @@ function toggleCameraFacing() {
   startCameraSimulator();
 }
 
+let creationMode = "photo"; // "photo" or "video"
+
 function setupCameraSwipeGestures(container) {
-  let touchstartX = 0;
-  let touchendX = 0;
+  let startX = 0;
+  let startY = 0;
+  let isPointerDown = false;
   
+  // Touch Events
   container.addEventListener('touchstart', e => {
-    touchstartX = e.changedTouches[0].screenX;
+    startX = e.changedTouches[0].clientX;
+    startY = e.changedTouches[0].clientY;
   }, { passive: true });
   
   container.addEventListener('touchend', e => {
-    touchendX = e.changedTouches[0].screenX;
-    handleGesture();
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    handleSwipe(startX, startY, endX, endY);
   }, { passive: true });
+
+  // Mouse drag fallback for swipe gesture
+  container.addEventListener('mousedown', e => {
+    startX = e.clientX;
+    startY = e.clientY;
+    isPointerDown = true;
+  });
+
+  container.addEventListener('mouseup', e => {
+    if (!isPointerDown) return;
+    isPointerDown = false;
+    const endX = e.clientX;
+    const endY = e.clientY;
+    handleSwipe(startX, startY, endX, endY);
+  });
+
+  container.addEventListener('mouseleave', () => {
+    isPointerDown = false;
+  });
   
-  function handleGesture() {
-    // Detect horizontal swipe of at least 80px
-    if (Math.abs(touchendX - touchstartX) > 80) {
-      toggleCameraFacing();
+  function handleSwipe(sX, sY, eX, eY) {
+    const diffX = eX - sX;
+    const diffY = eY - sY;
+    
+    // Check if swipe is horizontal and meets threshold (60px)
+    if (Math.abs(diffX) > 60 && Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 0) {
+        // Swipe Right: switch to photo mode
+        if (creationMode !== "photo") {
+          setCreationMode("photo");
+          showToast("사진 촬영 모드로 전환되었습니다. 📸");
+        }
+      } else {
+        // Swipe Left: switch to video mode
+        if (creationMode !== "video") {
+          setCreationMode("video");
+          showToast("동영상 촬영 모드로 전환되었습니다. 🎥");
+        }
+      }
+    }
+  }
+}
+
+function setCreationMode(mode) {
+  creationMode = mode;
+  document.querySelectorAll(".mode-pill").forEach(p => {
+    p.classList.remove("active");
+    p.style.color = "var(--text-secondary)";
+    p.style.background = "rgba(255,255,255,0.06)";
+  });
+  const activeBtn = document.getElementById(`mode-${mode}-btn`);
+  if (activeBtn) {
+    activeBtn.classList.add("active");
+    activeBtn.style.color = "#fff";
+    activeBtn.style.background = "var(--accent-pink)";
+  }
+  
+  const recordBtn = document.getElementById("studio-record-btn");
+  if (recordBtn) {
+    if (mode === "photo") {
+      recordBtn.style.background = "#ffffff";
+      recordBtn.style.border = "4px solid var(--accent-cyan)";
+      recordBtn.style.borderRadius = "50%";
+      recordBtn.style.boxShadow = "0 0 15px rgba(0, 242, 254, 0.4)";
+      recordBtn.innerHTML = "<span style='font-size:1rem;'>📸</span>";
+    } else {
+      recordBtn.style.background = "var(--accent-pink)";
+      recordBtn.style.border = "4px solid #ffffff";
+      recordBtn.style.borderRadius = "8px"; // Distinct square-ish look
+      recordBtn.style.boxShadow = "0 0 15px rgba(255, 42, 133, 0.6)";
+      recordBtn.innerHTML = "<span style='font-size:0.55rem; color:#fff; font-weight:800; letter-spacing:0.5px;'>● REC</span>";
     }
   }
 }
@@ -2408,6 +2462,7 @@ function stopCameraStream() {
     player.srcObject.getTracks().forEach(track => track.stop());
     player.srcObject = null;
   }
+  currentCameraStream = null;
 }
 
 // Tutorial Option Prompt
@@ -2773,14 +2828,116 @@ function applyStudioFilter(filterType) {
 
 let recordingActive = false;
 let recordTimer = null;
+
+function capturePhoto() {
+  const video = document.getElementById("live-video-player");
+  let dataUrl = "";
+  
+  if (video && video.readyState >= 2) {
+    const canvas = document.createElement("canvas");
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext("2d");
+    
+    // Mirror photo horizontally (selfie camera style)
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    
+    dataUrl = canvas.toDataURL("image/png");
+  } else {
+    // Falls back to a mirrored clean gradient canvas representation
+    const canvas = document.createElement("canvas");
+    canvas.width = 640;
+    canvas.height = 480;
+    const ctx = canvas.getContext("2d");
+    const grad = ctx.createLinearGradient(0, 0, 640, 480);
+    grad.addColorStop(0, '#ff2a85');
+    grad.addColorStop(1, '#00f2fe');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 640, 480);
+    
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 36px Outfit";
+    ctx.textAlign = "center";
+    ctx.fillText("Trend Spotlight Selfie 📸", 320, 220);
+    
+    dataUrl = canvas.toDataURL("image/png");
+  }
+  
+  const draftId = "draft-" + Date.now();
+  const newDraft = {
+    id: draftId,
+    name: "스냅 사진 #" + (state.draftsList.length + 1),
+    date: new Date().toLocaleDateString(),
+    type: "photo",
+    url: dataUrl
+  };
+  state.draftsList.push(newDraft);
+  saveState();
+  
+  showToast("사진이 보관함에 임시 저장되었습니다! 📸");
+  renderDraftsList();
+}
+
+let mediaRecorder = null;
+let recordedChunks = [];
+
 function toggleRecording() {
   const btn = document.getElementById("studio-record-btn");
   if (!btn) return;
 
+  if (creationMode === "photo") {
+    capturePhoto();
+    return;
+  }
+
   recordingActive = !recordingActive;
   if (recordingActive) {
     btn.classList.add("recording");
-    showToast("가이드에 맞춰 녹화를 시작합니다! 🎥");
+    btn.innerHTML = "<span style='font-size:0.55rem; color:#fff; font-weight:800; letter-spacing:0.5px;'>● 촬영 중</span>";
+    showToast("동영상 녹화를 시작합니다! 🎥");
+    recordedChunks = [];
+    
+    if (currentCameraStream) {
+      try {
+        mediaRecorder = new MediaRecorder(currentCameraStream, { mimeType: 'video/webm' });
+      } catch (e) {
+        try {
+          mediaRecorder = new MediaRecorder(currentCameraStream);
+        } catch (err) {
+          mediaRecorder = null;
+        }
+      }
+      
+      if (mediaRecorder) {
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            recordedChunks.push(e.data);
+          }
+        };
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(recordedChunks, { type: 'video/webm' });
+          const videoUrl = URL.createObjectURL(blob);
+          
+          const draftId = "draft-" + Date.now();
+          const newDraft = {
+            id: draftId,
+            name: "연습 촬영본 #" + (state.draftsList.length + 1),
+            date: new Date().toLocaleDateString(),
+            type: "video",
+            url: videoUrl
+          };
+          state.draftsList.push(newDraft);
+          saveState();
+          
+          showToast("동영상이 보관함에 임시 저장되었습니다! 🎥");
+          renderDraftsList();
+        };
+        mediaRecorder.start();
+      }
+    }
     
     recordTimer = setTimeout(() => {
       if (recordingActive) toggleRecording();
@@ -2788,19 +2945,27 @@ function toggleRecording() {
   } else {
     clearTimeout(recordTimer);
     btn.classList.remove("recording");
+    btn.innerHTML = "<span style='font-size:0.55rem; color:#fff; font-weight:800; letter-spacing:0.5px;'>● REC</span>";
     
-    const draftId = "draft-" + Date.now();
-    const newDraft = {
-      id: draftId,
-      name: "연습 촬영본 #" + (state.draftsList.length + 1),
-      date: new Date().toLocaleDateString(),
-      type: "video"
-    };
-    state.draftsList.push(newDraft);
-    saveState();
-    
-    showToast("임시보관함 저장 완료!");
-    renderDraftsList();
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();
+    } else {
+      // Offline fallback video url
+      const fallbackUrl = "https://www.w3schools.com/html/mov_bbb.mp4";
+      const draftId = "draft-" + Date.now();
+      const newDraft = {
+        id: draftId,
+        name: "연습 촬영본 #" + (state.draftsList.length + 1),
+        date: new Date().toLocaleDateString(),
+        type: "video",
+        url: fallbackUrl
+      };
+      state.draftsList.push(newDraft);
+      saveState();
+      
+      showToast("임시보관함 저장 완료!");
+      renderDraftsList();
+    }
   }
 }
 
@@ -2816,19 +2981,61 @@ function renderDraftsList() {
   list.innerHTML = state.draftsList.map(d => `
     <div style="background:rgba(255,255,255,0.02); border:1px solid var(--panel-border); border-radius:12px; padding:6px 10px; display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
       <div>
-        <div style="font-size:0.72rem; color:#fff; font-weight:700;">${d.name}</div>
+        <div style="font-size:0.72rem; color:#1e293b; font-weight:700;">${d.name}</div>
         <div style="font-size:0.6rem; color:var(--text-muted)">${d.date} | 30일 보관</div>
       </div>
       <div style="display:flex; gap:4px;">
-        <button class="store-btn" style="padding:2px 6px; font-size:0.65rem; margin:0;" onclick="downloadDraft('${d.id}')">저장</button>
+        <button class="store-btn" style="padding:2px 6px; font-size:0.65rem; margin:0; border-color:var(--accent-cyan); color:var(--accent-cyan);" onclick="viewDraft('${d.id}')">보기</button>
         <button class="store-btn" style="padding:2px 6px; font-size:0.65rem; margin:0; border-color:rgba(255,0,0,0.2); color:#ff5e9f;" onclick="deleteDraft('${d.id}')">삭제</button>
       </div>
     </div>
   `).join("");
 }
 
-function downloadDraft(id) {
-  showToast("갤러리/사진 앨범 저장을 완료했습니다! 💾");
+function viewDraft(id) {
+  const draft = state.draftsList.find(d => d.id === id);
+  if (!draft) {
+    showToast("파일을 찾을 수 없습니다.");
+    return;
+  }
+
+  const modal = document.createElement("div");
+  modal.id = "draft-viewer-modal";
+  modal.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+  `;
+
+  // Provide a clean mock url or support standard file previews
+  const isVideo = draft.type === "video";
+  const dummyUrl = isVideo ? "https://www.w3schools.com/html/mov_bbb.mp4" : "https://picsum.photos/600/800";
+  const mediaUrl = draft.url || dummyUrl;
+
+  let mediaHtml = "";
+  if (!isVideo) {
+    mediaHtml = `<img src="${mediaUrl}" style="max-width:100%; max-height:70vh; border-radius:16px; border:2px solid rgba(255,255,255,0.2); object-fit:contain; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">`;
+  } else {
+    mediaHtml = `<video src="${mediaUrl}" controls autoplay loop style="max-width:100%; max-height:70vh; border-radius:16px; border:2px solid rgba(255,255,255,0.2); object-fit:contain; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></video>`;
+  }
+
+  modal.innerHTML = `
+    <div style="width:100%; max-width:400px; display:flex; flex-direction:column; align-items:center; position:relative;">
+      <div style="align-self:flex-end; color:#fff; font-size:2rem; font-weight:300; cursor:pointer; margin-bottom:15px; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.1); border-radius:50%;" onclick="document.getElementById('draft-viewer-modal').remove()">✕</div>
+      ${mediaHtml}
+      <div style="color:#fff; font-size:0.9rem; font-weight:700; margin-top:16px; font-family:'Outfit',sans-serif;">${draft.name}</div>
+      <div style="color:var(--text-secondary); font-size:0.68rem; margin-top:4px;">촬영 시간: ${draft.date}</div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
 }
 
 function deleteDraft(id) {
@@ -3164,6 +3371,16 @@ window.addEventListener("DOMContentLoaded", () => {
       stopCameraStream();
     });
   });
+
+  // Bind swipe mode selector gestures
+  const modeSel = document.getElementById("creation-mode-selector");
+  if (modeSel) {
+    setupCameraSwipeGestures(modeSel);
+  }
+  const streamBox = document.getElementById("camera-stream-box");
+  if (streamBox) {
+    setupCameraSwipeGestures(streamBox);
+  }
 
   // Infinite Loop Scroll implementation for Home view
   const viewport = document.getElementById("app-viewport");

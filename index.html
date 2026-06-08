@@ -52,7 +52,7 @@
 
         <!-- Recent Search Words -->
         <div style="margin-bottom: 12px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:#fff; font-weight:700; margin-bottom:6px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; color:var(--text-primary); font-weight:700; margin-bottom:6px;">
             <span>최근 검색어</span>
             <span style="font-size:0.65rem; color:var(--text-muted); cursor:pointer;" onclick="clearRecentSearches()">전체 삭제</span>
           </div>
@@ -63,7 +63,7 @@
 
         <!-- Recommendation Badges (주문했던 메뉴 참고 스타일) -->
         <div style="margin-bottom: 16px;">
-          <div style="font-size:0.75rem; color:#fff; font-weight:700; margin-bottom:6px;">추천 관심 트렌드 🏷️</div>
+          <div style="font-size:0.75rem; color:var(--text-primary); font-weight:700; margin-bottom:6px;">추천 관심 트렌드 🏷️</div>
           <div style="display:flex; flex-wrap:wrap; gap:6px;">
             <span class="recommend-pill" onclick="triggerKeywordSearch('두바이초콜릿')">두바이초콜릿</span>
             <span class="recommend-pill" onclick="triggerKeywordSearch('요아정')">요아정</span>
@@ -77,93 +77,48 @@
         <div class="trending-keywords-box" style="margin-bottom: 12px;">
           <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.75rem; font-weight:700; color:var(--accent-cyan); margin-bottom:8px;">
             <span>실시간 인기 검색어 (트렌드)</span>
-            <span style="font-size:0.65rem; color:var(--text-muted);">10분 단위 갱신</span>
           </div>
           <div class="keyword-grid" id="search-top-keywords">
             <!-- 2-column layout (1-5, 6-10) with up/down arrows -->
           </div>
         </div>
 
-        <!-- Personalized feeds (Endless 3-column scrollable grid) -->
-        <div style="margin-top: 14px;">
-          <div style="font-size:0.78rem; font-weight:700; color:#fff; margin-bottom:8px;">실시간 추천 알고리즘 피드</div>
-          <!-- Outer container that can scroll vertically and has height constraint -->
-          <div style="max-height: 420px; overflow-y: auto; padding-right: 2px;" id="algo-scroll-viewport">
-            <div id="algorithm-cards-row" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
-              <!-- Rendered vertical cards dynamically inside app.js -->
-            </div>
-          </div>
-        </div>
       </section>
 
       <!-- SCREEN 3: CREATION STUDIO (제작) -->
       <section id="screen-creation" class="screen">
         <div class="creation-full-container">
           
-          <!-- FULL SCREEN CAMERA BACKROUND VIEWPORT -->
+          <!-- FULL SCREEN CAMERA BACKGROUND VIEWPORT -->
           <div id="camera-stream-box" style="width:100%; height:100%; position:absolute; inset:0; z-index:1;"></div>
 
-          <!-- Video guide overlay -->
-          <div class="camera-overlay-guideline" id="camera-overlay-instructions" style="z-index:2; display:none; align-items:center; justify-content:center;">
-            <div class="camera-overlay-text">가이드를 로드하려면 상단 튜토리얼 메뉴를 클릭하세요</div>
-          </div>
-
-          <!-- Right Floating Sidebar Buttons -->
-          <div class="creation-right-bar" style="top: 80px;">
-            <button class="sidebar-icon-btn" onclick="toggleStudioPopover('music')">
-              <span style="font-size:1rem;">🎵</span>
-              <span style="font-size:0.5rem; margin-top:2px;">노래</span>
-            </button>
-            <button class="sidebar-icon-btn" onclick="toggleStudioPopover('gif')">
-              <span style="font-size:1rem;">🖼️</span>
-              <span style="font-size:0.5rem; margin-top:2px;">짤 추가</span>
-            </button>
-            <button class="sidebar-icon-btn" onclick="triggerStudioPhotoUpload()">
-              <span style="font-size:1rem;">📷</span>
-              <span style="font-size:0.5rem; margin-top:2px;">사진</span>
-            </button>
-            <button class="sidebar-icon-btn" onclick="toggleStudioFiltersList()">
-              <span style="font-size:1rem;">✨</span>
-              <span style="font-size:0.5rem; margin-top:2px;">필터</span>
-            </button>
+          <!-- Right Floating Sidebar Buttons (Switch Camera) -->
+          <div class="creation-right-bar" id="creation-edit-sidebar" style="top: 80px; display: flex; z-index: 10;">
             <button class="sidebar-icon-btn" onclick="toggleCameraFacing()">
               <span style="font-size:1rem;">🔄</span>
               <span style="font-size:0.5rem; margin-top:2px;">전환</span>
             </button>
           </div>
 
-          <!-- Top Right Tutorial Toolbar Drawer -->
-          <div class="tutorial-banner" id="studio-tutorial-banner" style="position:absolute; top:12px; left:12px; right:12px; z-index:5; background:rgba(10,12,18,0.85); padding:8px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-              <span style="font-size:0.7rem; font-weight:700; color:var(--accent-cyan);">우측 상단 튜토리얼 기능:</span>
-              <button onclick="toggleTutorial(true)" style="background:none; border:none; color:var(--accent-pink); font-size:0.65rem; cursor:pointer;">[가이드 안보기]</button>
-            </div>
-            <div style="display:flex; gap:6px;">
-              <button class="inner-pill" style="padding:3px 6px; font-size:0.6rem;" onclick="requestTutorialOption('숏폼')">🎬 숏폼</button>
-              <button class="inner-pill" style="padding:3px 6px; font-size:0.6rem;" onclick="requestTutorialOption('게시물')">📝 게시물</button>
-              <button class="inner-pill" style="padding:3px 6px; font-size:0.6rem;" onclick="requestTutorialOption('스토리')">📱 스토리</button>
-            </div>
-          </div>
-
-          <!-- Music Selector Popover -->
-          <div class="studio-popover" id="studio-popover-music" style="display:none; position:absolute; left:12px; right:12px; top:80px; background:rgba(10,12,18,0.95); border:2px solid var(--accent-cyan); border-radius:16px; padding:10px; z-index:20; max-height:220px; overflow-y:auto;">
+          <!-- Music Selector Popover (Light Theme) -->
+          <div class="studio-popover" id="studio-popover-music" style="display:none; position:absolute; left:12px; right:12px; top:80px; background:rgba(255,255,255,0.98); border:2px solid var(--accent-cyan); border-radius:16px; padding:10px; z-index:20; max-height:220px; overflow-y:auto; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <span style="font-size:0.75rem; font-weight:700; color:var(--accent-cyan);">🎵 유행 노래 검색 & 추천</span>
+              <span style="font-size:0.75rem; font-weight:700; color:var(--text-primary);">🎵 유행 노래 검색 & 추천</span>
               <button onclick="closeStudioPopovers()" style="background:none; border:none; color:#ff2a85; font-size:0.7rem; cursor:pointer;">닫기</button>
             </div>
-            <input type="text" class="studio-input" placeholder="유행하는 노래 제목 검색..." style="padding:6px; font-size:0.75rem; margin-bottom:8px;" oninput="filterStudioMusic(this.value)">
+            <input type="text" class="studio-input" placeholder="유행하는 노래 제목 검색..." style="padding:6px; font-size:0.75rem; margin-bottom:8px; background:#f1f5f9; color:#1e293b; border:1px solid rgba(0,0,0,0.15);" oninput="filterStudioMusic(this.value)">
             <div id="studio-music-list" style="display:flex; flex-direction:column; gap:6px;">
               <!-- Recommended trending music loaded dynamically -->
             </div>
           </div>
 
-          <!-- GIF Selector Popover -->
-          <div class="studio-popover" id="studio-popover-gif" style="display:none; position:absolute; left:12px; right:12px; top:80px; background:rgba(10,12,18,0.95); border:2px solid var(--accent-purple); border-radius:16px; padding:10px; z-index:20; max-height:220px; overflow-y:auto;">
+          <!-- GIF Selector Popover (Light Theme) -->
+          <div class="studio-popover" id="studio-popover-gif" style="display:none; position:absolute; left:12px; right:12px; top:80px; background:rgba(255,255,255,0.98); border:2px solid var(--accent-purple); border-radius:16px; padding:10px; z-index:20; max-height:220px; overflow-y:auto; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <span style="font-size:0.75rem; font-weight:700; color:var(--accent-purple);">🖼️ 인기 짤방 갤러리</span>
+              <span style="font-size:0.75rem; font-weight:700; color:var(--text-primary);">🖼️ 인기 짤방 갤러리</span>
               <button onclick="closeStudioPopovers()" style="background:none; border:none; color:#ff2a85; font-size:0.7rem; cursor:pointer;">닫기</button>
             </div>
-            <input type="text" class="studio-input" placeholder="원하는 짤방 키워드 검색..." style="padding:6px; font-size:0.75rem; margin-bottom:8px;" oninput="filterStudioGifs(this.value)">
+            <input type="text" class="studio-input" placeholder="원하는 짤방 키워드 검색..." style="padding:6px; font-size:0.75rem; margin-bottom:8px; background:#f1f5f9; color:#1e293b; border:1px solid rgba(0,0,0,0.15);" oninput="filterStudioGifs(this.value)">
             <div id="studio-gif-grid" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:6px;">
               <!-- Recommended popular GIFs loaded dynamically -->
             </div>
@@ -172,10 +127,10 @@
           <!-- User photo file selector element (Invisible) -->
           <input type="file" id="studio-photo-file-input" accept="image/*" style="display:none;" onchange="handleStudioPhotoSelected(event)">
 
-          <!-- Live Filters Drawer (Horizontal list positioned right above the capture button) -->
-          <div id="studio-filters-drawer" style="display:none; position:absolute; bottom:245px; left:12px; right:12px; z-index:5; background:rgba(10,12,18,0.92); padding:6px; border-radius:10px; border:1.5px solid rgba(255,255,255,0.12);">
+          <!-- Live Filters Drawer -->
+          <div id="studio-filters-drawer" style="display:none; position:absolute; bottom:245px; left:12px; right:12px; z-index:5; background:rgba(255,255,255,0.95); padding:6px; border-radius:10px; border:1.5px solid rgba(0,0,0,0.12); box-shadow: 0 6px 18px rgba(0,0,0,0.1);">
             <div style="display:flex; justify-content:flex-end; margin-bottom:4px;">
-              <button onclick="closeStudioFiltersList()" style="background:none; border:none; color:#94a3b8; font-size:0.6rem; cursor:pointer;">닫기 ✕</button>
+              <button onclick="closeStudioFiltersList()" style="background:none; border:none; color:#475569; font-size:0.6rem; cursor:pointer;">닫기 ✕</button>
             </div>
             <div style="display:flex; gap:8px; overflow-x:auto; padding-bottom:2px;">
               <span class="melon-pill" onclick="applyStudioFilter('normal')">필터 없음</span>
@@ -186,17 +141,23 @@
             </div>
           </div>
 
-          <!-- Creation Settings and Record Drawer (Moved Drafts to the bottom) -->
+          <!-- Creation Settings and Record Drawer -->
           <div class="creation-overlay-drawer">
+            <!-- Mode Selector (Photo vs Video) -->
+            <div id="creation-mode-selector" style="display:flex; justify-content:center; gap:12px; margin-bottom:8px; z-index:10; position:relative;">
+              <span id="mode-photo-btn" class="mode-pill active" onclick="setCreationMode('photo')" style="cursor:pointer; font-size:0.7rem; padding:4px 10px; border-radius:12px; background:var(--accent-pink); color:#fff; font-weight:700; transition:all 0.2s;">사진 촬영</span>
+              <span id="mode-video-btn" class="mode-pill" onclick="setCreationMode('video')" style="cursor:pointer; font-size:0.7rem; padding:4px 10px; border-radius:12px; background:rgba(0,0,0,0.05); color:var(--text-secondary); font-weight:700; transition:all 0.2s;">동영상 촬영</span>
+            </div>
+
             <div class="record-row-center" style="margin-bottom: 6px;">
               <button class="record-btn" id="studio-record-btn" onclick="toggleRecording()"></button>
             </div>
 
-            <!-- Upload input and separate privacy toggles -->
-            <form class="studio-form" style="background:rgba(10,12,18,0.9); padding:8px; gap:6px; border-radius:12px;">
-              <input type="text" id="publish-title" class="studio-input" style="padding:5px; font-size:0.75rem;" placeholder="제목을 입력하세요">
+            <!-- Upload input and separate privacy toggles (Initially hidden, shown during edit) -->
+            <form class="studio-form" id="studio-upload-form" style="background:rgba(255,255,255,0.95); padding:8px; gap:6px; border-radius:12px; display:none; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+              <input type="text" id="publish-title" class="studio-input" style="padding:5px; font-size:0.75rem; background:#f1f5f9; color:#1e293b; border:1px solid rgba(0,0,0,0.1);" placeholder="제목을 입력하세요">
               
-              <div style="display:flex; justify-content:space-between; font-size:0.62rem; color:var(--text-secondary);">
+              <div style="display:flex; justify-content:space-between; font-size:0.62rem; color:var(--text-secondary); margin-bottom:6px;">
                 <label><input type="checkbox" id="publish-private-likes"> 좋아요 비공개</label>
                 <label><input type="checkbox" id="publish-private-comments"> 댓글 비공개</label>
                 <label><input type="checkbox" id="publish-private-shares"> 공유 비공개</label>
@@ -207,11 +168,10 @@
 
             <!-- Drafts placed below settings box inside the scroll layout -->
             <div style="max-height:85px; overflow-y:auto; border-top: 1px solid var(--panel-border); padding-top: 6px; margin-top: 4px;">
-              <div style="font-size:0.65rem; color:var(--accent-cyan); font-weight:700; margin-bottom:4px;">📥 임시 저장 보관함</div>
+              <div style="font-size:0.65rem; color:var(--accent-pink); font-weight:700; margin-bottom:4px;">📥 임시 저장 보관함</div>
               <div id="creation-drafts-list"></div>
             </div>
           </div>
-
         </div>
       </section>
 
@@ -260,23 +220,23 @@
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             </button>
           </div>
-
+ 
           <!-- 3. Friend Code -->
           <div style="font-size:0.65rem; color:var(--text-muted); margin-bottom:4px;">친구코드: TRND-8894</div>
-
+ 
           <!-- 4. Add Friend Button (Moved directly below Friend Code) -->
-          <button class="submit-btn" style="width:100%; margin-top:2px; font-size:0.75rem; padding:6px; background:rgba(255,255,255,0.06); border:1px solid var(--panel-border); color:#fff;" onclick="showFriendModal()">
+          <button class="submit-btn" style="width:100%; margin-top:2px; font-size:0.75rem; padding:6px; background:rgba(0,0,0,0.05); border:1px solid var(--panel-border); color:var(--text-primary);" onclick="showFriendModal()">
             ➕ 친구 추가하기
           </button>
-
+ 
           <!-- 5. Trend Sensitivity Pyramid (Moved below Add Friend) -->
           <div class="pyramid-container" style="height:130px; margin: 6px 0;">
             <svg class="pyramid-svg" id="profile-pyramid-svg"></svg>
           </div>
           <div class="sensitivity-score-card" id="profile-sensitivity-badge" style="font-size:0.72rem; padding:5px;">
-            유행 지표 민감도: <strong>Top 50%</strong> (초보 유행 인형 🧸)
+            유행 지표 민감도: <strong>Top 50%</strong>
           </div>
-
+ 
           <!-- Data Sources Citation Card -->
           <div style="margin-top: 10px; background: rgba(0,0,0,0.25); border: 1px dashed rgba(255,255,255,0.08); padding: 8px; border-radius: 12px; width: 100%; text-align: left;">
             <div style="font-size:0.68rem; font-weight:700; color:var(--accent-cyan); margin-bottom:4px;">📊 2026 실시간 유행 출처 정보</div>
@@ -288,7 +248,6 @@
                 <a href="https://www.tiktok.com" target="_blank" style="color:var(--accent-pink); text-decoration:none; background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px;">TikTok</a>
                 <a href="https://x.com" target="_blank" style="color:var(--accent-pink); text-decoration:none; background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px;">X</a>
                 <a href="https://www.threads.net" target="_blank" style="color:var(--accent-pink); text-decoration:none; background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px;">Threads</a>
-                <a href="https://www.melon.com" target="_blank" style="color:var(--accent-pink); text-decoration:none; background: rgba(255,255,255,0.05); padding: 2px 5px; border-radius: 4px;">Melon</a>
               </div>
             </div>
           </div>
@@ -381,18 +340,6 @@
       <div class="modal-actions">
         <button class="modal-btn secondary" onclick="closeNicknameModal()">취소</button>
         <button class="modal-btn primary" onclick="submitNicknameChange()">적용</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- FRIEND CODE MODAL -->
-  <div class="modal-overlay" id="friend-modal">
-    <div class="modal-card">
-      <h3 class="modal-title">친구 추가</h3>
-      <input type="text" id="friend-code-input" class="studio-input" placeholder="친구 코드 입력 (예: 유행추적기#2048)">
-      <div class="modal-actions">
-        <button class="modal-btn secondary" onclick="closeFriendModal()">닫기</button>
-        <button class="modal-btn primary" onclick="submitAddFriend()">요청</button>
       </div>
     </div>
   </div>
