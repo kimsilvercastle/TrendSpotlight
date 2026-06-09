@@ -1,35 +1,39 @@
 // State Management
-let state = {
-  gems: 10600,
-  likedList: ["dubai-chocolate"],
-  bookmarkedList: ["even-cook"],
-  uploadedList: [],
-  userNickname: "솜뭉치인형",
-  isSecondNickChange: false,
-  avatarConfig: {
-    hair: "Short Black",
-    accessory: "None",
-    headwear: "None",
-    back: "None",
-    eyes: "Normal",
-    mouth: "Smile",
-    top: "Base Shirt",
-    bottom: "Base Shorts",
-    hand: "None",
-    contacts: "Standard Gray",
-    shoes: "Sneakers White",
-    crown: "None"
-  },
-  boughtAvatarItems: ["Short Black", "Normal", "Smile", "Base Shirt", "Base Shorts", "Standard Gray", "Sneakers White"],
-  lastAttendance: null,
-  isTutorialHidden: false,
-  friendsList: ["유행추적기#2048", "릴스중독자#9901"],
-  cameraPermGranted: false,
-  recentSearches: ["두바이초콜릿", "요아정", "최강록 이븐", "위플래시"],
-  draftsList: [
-    { id: "draft-mock1", type: "video", date: "2026-05-26", name: "두바이 초콜릿 믹싱 ASMR" }
-  ]
-};
+function getDefaultState(nickname) {
+  const code = `TRND-${Math.floor(1000 + Math.random() * 9000)}`;
+  return {
+    gems: 10000,
+    likedList: [],
+    bookmarkedList: [],
+    uploadedList: [],
+    userNickname: nickname || "솜뭉치인형",
+    isSecondNickChange: false,
+    avatarConfig: {
+      hair: "Short Black",
+      accessory: "None",
+      headwear: "None",
+      back: "None",
+      eyes: "Normal",
+      mouth: "Smile",
+      top: "Base Shirt",
+      bottom: "Base Shorts",
+      hand: "None",
+      contacts: "Standard Gray",
+      shoes: "Sneakers White",
+      crown: "None"
+    },
+    boughtAvatarItems: ["Short Black", "Normal", "Smile", "Base Shirt", "Base Shorts", "Standard Gray", "Sneakers White"],
+    lastAttendance: null,
+    isTutorialHidden: true,
+    friendsList: [],
+    cameraPermGranted: false,
+    recentSearches: [],
+    draftsList: [],
+    friendCode: code
+  };
+}
+
+let state = getDefaultState("솜뭉치인형");
 
 let currentActiveFilters = {
   mainTab: "chart",
@@ -106,28 +110,29 @@ const shopItems = [
 ];
 
 function loadState() {
-  const saved = localStorage.getItem("trend_spotlight_plushie_state");
-  if (saved) {
-    try {
-      state = { ...state, ...JSON.parse(saved) };
-      if (state.currentUser) {
-        currentUser = state.currentUser;
+  if (currentUser && currentUser.email) {
+    const saved = localStorage.getItem("trend_spotlight_state_" + currentUser.email);
+    if (saved) {
+      try {
+        state = { ...getDefaultState(currentUser.nickname), ...JSON.parse(saved) };
+      } catch (e) {
+        console.error("Error loading state", e);
+        state = getDefaultState(currentUser.nickname);
       }
-    } catch (e) {
-      console.error("Error loading state", e);
+    } else {
+      state = getDefaultState(currentUser.nickname);
+      saveState();
     }
-  }
-  // Award 10000 gems bonus as requested
-  if (!localStorage.getItem("trend_spotlight_gems_bonus_awarded")) {
-    state.gems += 10000;
-    localStorage.setItem("trend_spotlight_gems_bonus_awarded", "true");
-    saveState();
+  } else {
+    state = getDefaultState("솜뭉치인형");
   }
   updateGemBadge();
 }
 
 function saveState() {
-  localStorage.setItem("trend_spotlight_plushie_state", JSON.stringify(state));
+  if (currentUser && currentUser.email) {
+    localStorage.setItem("trend_spotlight_state_" + currentUser.email, JSON.stringify(state));
+  }
   updateGemBadge();
 }
 
@@ -2922,21 +2927,25 @@ function toggleRecording() {
         };
         mediaRecorder.onstop = () => {
           const blob = new Blob(recordedChunks, { type: 'video/webm' });
-          const videoUrl = URL.createObjectURL(blob);
           
-          const draftId = "draft-" + Date.now();
-          const newDraft = {
-            id: draftId,
-            name: "연습 촬영본 #" + (state.draftsList.length + 1),
-            date: new Date().toLocaleDateString(),
-            type: "video",
-            url: videoUrl
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64data = reader.result;
+            const draftId = "draft-" + Date.now();
+            const newDraft = {
+              id: draftId,
+              name: "연습 촬영본 #" + (state.draftsList.length + 1),
+              date: new Date().toLocaleDateString(),
+              type: "video",
+              url: base64data
+            };
+            state.draftsList.push(newDraft);
+            saveState();
+            
+            showToast("동영상이 보관함에 임시 저장되었습니다! 🎥");
+            renderDraftsList();
           };
-          state.draftsList.push(newDraft);
-          saveState();
-          
-          showToast("동영상이 보관함에 임시 저장되었습니다! 🎥");
-          renderDraftsList();
+          reader.readAsDataURL(blob);
         };
         mediaRecorder.start();
       }
@@ -3174,6 +3183,11 @@ function renderProfileView() {
   const name = document.getElementById("profile-display-name");
   if (name) name.textContent = state.userNickname;
 
+  const fcode = document.getElementById("profile-friend-code");
+  if (fcode && state.friendCode) {
+    fcode.textContent = `친구코드: ${state.friendCode}`;
+  }
+
   renderPyramid();
   renderProfileTabContent("my");
 }
@@ -3196,19 +3210,13 @@ function renderProfileTabContent(tab) {
       return;
     }
     container.innerHTML = state.uploadedList.map(p => `
-      <div style="background:rgba(255,255,255,0.02); border:1px solid var(--panel-border); border-radius:12px; padding:10px;">
+      <div style="background:rgba(255,255,255,0.02); border:1px solid var(--panel-border); border-radius:12px; padding:10px; margin-bottom: 6px;">
         <div style="font-size:0.7rem; color:var(--accent-cyan); font-weight:700;">내 업로드 | ${p.platform}</div>
-        <div style="font-size:0.8rem; font-weight:700; color:#fff; margin:3px 0;">${p.title}</div>
+        <div style="font-size:0.8rem; font-weight:700; color:var(--text-primary); margin:3px 0;">${p.title}</div>
         <div style="font-size:0.65rem; color:var(--text-muted)">설정: 좋아요(${p.likesPrivate ? '비공개' : '공개'}), 댓글(${p.commentsPrivate ? '비공개' : '공개'})</div>
       </div>
     `).join("");
-  } else if (tab === "like") {
-    const list = window.trendsData.trends.filter(t => state.likedList.includes(t.id));
-    if (list.length === 0) {
-      container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.75rem;">좋아요 한 유행이 없습니다.</div>`;
-      return;
-    }
-    container.innerHTML = list.map(t => renderSimpleProfileRow(t)).join("");
+
   } else if (tab === "bookmark") {
     // Collect unique bookmarks from bookmarkedList (supports both title strings and IDs)
     const list = [];
@@ -3232,7 +3240,7 @@ function renderProfileTabContent(tab) {
     }
     container.innerHTML = list.map(t => `
       <div style="background:rgba(255,255,255,0.02); border:1px solid var(--panel-border); border-radius:12px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
-        <span style="font-size:0.78rem; font-weight:700; color:#fff">${t.title}</span>
+        <span style="font-size:0.78rem; font-weight:700; color:var(--text-primary);">${t.title}</span>
         <span style="font-size:0.65rem; color:var(--accent-cyan);">${t.platform}</span>
       </div>
     `).join("");
@@ -3242,7 +3250,7 @@ function renderProfileTabContent(tab) {
 function renderSimpleProfileRow(t) {
   return `
     <div style="background:rgba(255,255,255,0.02); border:1px solid var(--panel-border); border-radius:12px; padding:8px 12px; display:flex; justify-content:space-between; align-items:center;">
-      <span style="font-size:0.78rem; font-weight:700; color:#fff">${t.title}</span>
+      <span style="font-size:0.78rem; font-weight:700; color:var(--text-primary)">${t.title}</span>
       <span style="font-size:0.7rem; color:var(--accent-cyan);">${t.platform}</span>
     </div>
   `;
@@ -3537,7 +3545,7 @@ async function handlePageAuthSubmit() {
         return;
       }
       currentUser = { email: user.email, nickname: user.nickname };
-      state.currentUser = currentUser;
+      loadState();
       state.userNickname = user.nickname;
       saveState();
 
@@ -3577,7 +3585,7 @@ async function handlePageAuthSubmit() {
       updatePageAuthUI();
     } else {
       currentUser = { email: data.email, nickname: data.nickname };
-      state.currentUser = currentUser;
+      loadState();
       state.userNickname = data.nickname;
       saveState();
 
@@ -3621,7 +3629,7 @@ async function handlePageAuthSubmit() {
         return;
       }
       currentUser = { email: user.email, nickname: user.nickname };
-      state.currentUser = currentUser;
+      loadState();
       state.userNickname = user.nickname;
       saveState();
 

@@ -8,5 +8,15 @@
     "email": "tester_4722@example.com",
     "password": "pass_4722",
     "nickname": "tester_4722"
+  },
+  {
+    "email": "tester_311@example.com",
+    "password": "pass_311",
+    "nickname": "tester_311"
+  },
+  {
+    "email": "tester_3987@example.com",
+    "password": "pass_3987",
+    "nickname": "tester_3987"
   }
 ]

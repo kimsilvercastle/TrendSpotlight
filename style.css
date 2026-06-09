@@ -995,7 +995,8 @@ header {
 }
 
 .profile-tab-item.active {
-  color: #fff;
+  color: var(--text-primary);
+  font-weight: 700;
 }
 
 .profile-tab-item.active::after {
