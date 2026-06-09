@@ -110,6 +110,9 @@ function loadState() {
   if (saved) {
     try {
       state = { ...state, ...JSON.parse(saved) };
+      if (state.currentUser) {
+        currentUser = state.currentUser;
+      }
     } catch (e) {
       console.error("Error loading state", e);
     }
@@ -3350,8 +3353,22 @@ function showToast(msg) {
 window.addEventListener("DOMContentLoaded", () => {
   loadState();
   setHomeFilter("chart", "TOP100");
-  navigateTo("home");
   updateAvatarDisplays();
+  
+  if (currentUser) {
+    document.getElementById("app-header").style.display = "flex";
+    document.getElementById("app-nav").style.display = "flex";
+    document.getElementById("screen-auth").classList.remove("active");
+    document.getElementById("screen-auth").style.setProperty("display", "none", "important");
+    navigateTo("home");
+  } else {
+    document.getElementById("app-header").style.display = "none";
+    document.getElementById("app-nav").style.display = "none";
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    const authScreen = document.getElementById("screen-auth");
+    authScreen.style.removeProperty("display");
+    authScreen.classList.add("active");
+  }
 
   // Hook search triggers
   const inp = document.getElementById("search-query-input");
@@ -3454,5 +3471,187 @@ function appendKitschCardsLoop() {
   }
   
   container.insertAdjacentHTML('beforeend', newHtml);
+}
+
+// Dedicated Screen Authentication Controller
+let pageAuthMode = "login"; // "login" or "signup"
+let currentUser = null;
+
+function togglePageAuthMode() {
+  pageAuthMode = (pageAuthMode === "login") ? "signup" : "login";
+  updatePageAuthUI();
+}
+
+function updatePageAuthUI() {
+  const title = document.getElementById("page-auth-title");
+  const primaryBtn = document.getElementById("page-auth-primary-btn");
+  const toggleLink = document.getElementById("page-auth-toggle-link");
+
+  if (pageAuthMode === "login") {
+    title.textContent = "이메일 로그인";
+    primaryBtn.textContent = "로그인";
+    toggleLink.textContent = "아직 회원이 아니신가요? 회원가입";
+  } else {
+    title.textContent = "이메일 회원가입";
+    primaryBtn.textContent = "회원등록 가입";
+    toggleLink.textContent = "이미 회원이신가요? 로그인하기";
+  }
+}
+
+async function handlePageAuthSubmit() {
+  const email = document.getElementById("page-auth-email").value.trim();
+  const password = document.getElementById("page-auth-password").value.trim();
+
+  if (!email || !password) {
+    showToast("이메일과 비밀번호를 모두 입력해 주세요.");
+    return;
+  }
+
+  const isLocalFile = window.location.protocol === "file:";
+
+  if (isLocalFile) {
+    // Local offline fallback using localStorage
+    let mockUsers = [];
+    try {
+      mockUsers = JSON.parse(localStorage.getItem("trend_spotlight_mock_users") || "[]");
+    } catch (e) {
+      mockUsers = [];
+    }
+
+    if (pageAuthMode === "signup") {
+      const exists = mockUsers.some(u => u.email.toLowerCase() === email.toLowerCase());
+      if (exists) {
+        showToast("이미 가입된 이메일 주소입니다.");
+        return;
+      }
+      const nickname = email.split('@')[0] || "유저";
+      mockUsers.push({ email, password, nickname });
+      localStorage.setItem("trend_spotlight_mock_users", JSON.stringify(mockUsers));
+      showToast("회원가입이 완료되었습니다! 로그인해 주세요.");
+      pageAuthMode = "login";
+      updatePageAuthUI();
+    } else {
+      const user = mockUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+      if (!user) {
+        showToast("이메일 또는 비밀번호가 일치하지 않습니다.");
+        return;
+      }
+      currentUser = { email: user.email, nickname: user.nickname };
+      state.currentUser = currentUser;
+      state.userNickname = user.nickname;
+      saveState();
+
+      showToast("로그인에 성공했습니다!");
+      document.getElementById("app-header").style.display = "flex";
+      document.getElementById("app-nav").style.display = "flex";
+      document.getElementById("screen-auth").classList.remove("active");
+      document.getElementById("screen-auth").style.setProperty("display", "none", "important");
+      renderProfileView();
+      navigateTo("home");
+    }
+    return;
+  }
+
+  const endpoint = pageAuthMode === "login" ? "/api/login" : "/api/signup";
+
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      showToast(data.error || "오류가 발생했습니다.");
+      return;
+    }
+
+    showToast(data.message);
+    
+    if (pageAuthMode === "signup") {
+      pageAuthMode = "login";
+      updatePageAuthUI();
+    } else {
+      currentUser = { email: data.email, nickname: data.nickname };
+      state.currentUser = currentUser;
+      state.userNickname = data.nickname;
+      saveState();
+
+      // Show application header & nav bar
+      document.getElementById("app-header").style.display = "flex";
+      document.getElementById("app-nav").style.display = "flex";
+
+      // Hide auth screen and display home screen
+      document.getElementById("screen-auth").classList.remove("active");
+      document.getElementById("screen-auth").style.setProperty("display", "none", "important");
+      
+      renderProfileView();
+      navigateTo("home");
+    }
+  } catch (err) {
+    console.error("Auth submit error, falling back to local storage auth:", err);
+    // Network fallback in case server is down
+    let mockUsers = [];
+    try {
+      mockUsers = JSON.parse(localStorage.getItem("trend_spotlight_mock_users") || "[]");
+    } catch (e) {
+      mockUsers = [];
+    }
+
+    if (pageAuthMode === "signup") {
+      const exists = mockUsers.some(u => u.email.toLowerCase() === email.toLowerCase());
+      if (exists) {
+        showToast("이미 가입된 이메일 주소입니다.");
+        return;
+      }
+      const nickname = email.split('@')[0] || "유저";
+      mockUsers.push({ email, password, nickname });
+      localStorage.setItem("trend_spotlight_mock_users", JSON.stringify(mockUsers));
+      showToast("회원가입이 완료되었습니다! (로컬 백업)");
+      pageAuthMode = "login";
+      updatePageAuthUI();
+    } else {
+      const user = mockUsers.find(u => u.email.toLowerCase() === email.toLowerCase() && u.password === password);
+      if (!user) {
+        showToast("이메일 또는 비밀번호가 일치하지 않습니다. (서버 연결 실패)");
+        return;
+      }
+      currentUser = { email: user.email, nickname: user.nickname };
+      state.currentUser = currentUser;
+      state.userNickname = user.nickname;
+      saveState();
+
+      showToast("로그인 성공! (로컬)");
+      document.getElementById("app-header").style.display = "flex";
+      document.getElementById("app-nav").style.display = "flex";
+      document.getElementById("screen-auth").classList.remove("active");
+      document.getElementById("screen-auth").style.setProperty("display", "none", "important");
+      renderProfileView();
+      navigateTo("home");
+    }
+  }
+}
+
+function handleLogout() {
+  currentUser = null;
+  state.currentUser = null;
+  state.userNickname = "솜뭉치인형";
+  saveState();
+
+  // Hide application header & nav bar
+  document.getElementById("app-header").style.display = "none";
+  document.getElementById("app-nav").style.display = "none";
+
+  // Deactivate all screens and show screen-auth
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  const authScreen = document.getElementById("screen-auth");
+  authScreen.style.removeProperty("display");
+  authScreen.classList.add("active");
+
+  showToast("로그아웃 되었습니다.");
 }
 

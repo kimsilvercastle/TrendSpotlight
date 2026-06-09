@@ -13,7 +13,7 @@
   <div class="app-container">
     
     <!-- Top Bar Header -->
-    <header>
+    <header id="app-header" style="display: none;">
       <div class="logo-section">
         <h1>유행 모아보기</h1>
         <span>Trend Spotlight</span>
@@ -32,8 +32,40 @@
     <!-- Main Viewport Scroll Area -->
     <main class="app-content" id="app-viewport">
       
+      <!-- SCREEN 0: AUTH (진입 차단 로그인/회원가입 화면) -->
+      <section id="screen-auth" class="screen active" style="padding: 20px 10px; display: flex; flex-direction: column; justify-content: center; height: 100%; min-height: 480px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <span style="font-size: 2.5rem;">⚡</span>
+          <h2 style="font-family: var(--font-title); font-size: 1.4rem; font-weight: 800; color: var(--text-primary); margin-top: 8px;">트렌드 스포트라이트</h2>
+          <p style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 4px;">가장 먼저 2026 실시간 유행 정보를 확인해 보세요</p>
+        </div>
+
+        <div class="modal-card" style="background:#ffffff; color:#1e293b; border-radius:24px; padding:20px; box-shadow: var(--glass-shadow); border: 1.5px solid var(--panel-border); margin: 0 auto; width: 100%; max-width: 340px;">
+          <h3 id="page-auth-title" style="color:var(--text-primary); font-weight:800; font-size:1rem; margin-bottom:12px; text-align:center;">이메일 로그인</h3>
+          
+          <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
+            <div>
+              <label style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:4px;">이메일 주소</label>
+              <input type="email" id="page-auth-email" class="studio-input" placeholder="example@email.com" style="padding:8px; font-size:0.75rem; color:#1e293b; background:#f1f5f9; border:1px solid rgba(0,0,0,0.1);">
+            </div>
+            <div>
+              <label style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:4px;">비밀번호</label>
+              <input type="password" id="page-auth-password" class="studio-input" placeholder="비밀번호 입력" style="padding:8px; font-size:0.75rem; color:#1e293b; background:#f1f5f9; border:1px solid rgba(0,0,0,0.1);">
+            </div>
+          </div>
+
+          <div class="modal-actions" style="display:flex; flex-direction:column; gap:8px;">
+            <button class="submit-btn" id="page-auth-primary-btn" style="width:100%; font-size:0.75rem; padding:8px;" onclick="handlePageAuthSubmit()">로그인</button>
+            
+            <div style="text-align:center; margin-top:4px;">
+              <a href="javascript:void(0)" id="page-auth-toggle-link" style="font-size:0.68rem; color:var(--accent-pink); text-decoration:none; font-weight:700;" onclick="togglePageAuthMode()">아직 회원이 아니신가요? 회원가입</a>
+            </div>
+          </div>
+        </div>
+      </section>
+      
       <!-- SCREEN 1: HOME (홈 화면 - 멜론차트 스타일) -->
-      <section id="screen-home" class="screen active">
+      <section id="screen-home" class="screen">
         <!-- 2.5D Kitsch Card Deck Container -->
         <div class="kitsch-deck-container" id="kitsch-deck">
           <!-- Cards are dynamically rendered by app.js here -->
@@ -266,7 +298,7 @@
     </main>
 
     <!-- Bottom Navigation Bar -->
-    <nav class="bottom-nav">
+    <nav class="bottom-nav" id="app-nav" style="display: none;">
       <div class="nav-item active" data-screen="home" onclick="navigateTo('home')">
         <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         <span>홈</span>
@@ -340,6 +372,30 @@
       <div class="modal-actions">
         <button class="modal-btn secondary" onclick="closeNicknameModal()">취소</button>
         <button class="modal-btn primary" onclick="submitNicknameChange()">적용</button>
+      </div>
+    </div>
+  <!-- USER AUTHENTICATION MODAL -->
+  <div class="modal-overlay" id="auth-modal" style="display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.8); z-index:9999;">
+    <div class="modal-card" style="max-width:360px; width:90%; background:#ffffff; color:#1e293b; border-radius:24px; padding:20px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1.5px solid var(--panel-border);">
+      <h3 class="modal-title" id="auth-modal-title" style="color:var(--text-primary); font-weight:800; font-size:1.05rem; margin-bottom:12px; text-align:center;">이메일 로그인</h3>
+      
+      <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
+        <div>
+          <label style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:4px;">이메일 주소</label>
+          <input type="email" id="auth-email" class="studio-input" placeholder="example@email.com" style="padding:8px; font-size:0.75rem; color:#1e293b; background:#f1f5f9; border:1px solid rgba(0,0,0,0.1);">
+        </div>
+        <div>
+          <label style="font-size:0.7rem; font-weight:700; color:var(--text-secondary); display:block; margin-bottom:4px;">비밀번호</label>
+          <input type="password" id="auth-password" class="studio-input" placeholder="비밀번호 입력" style="padding:8px; font-size:0.75rem; color:#1e293b; background:#f1f5f9; border:1px solid rgba(0,0,0,0.1);">
+        </div>
+      </div>
+
+      <div class="modal-actions" style="display:flex; flex-direction:column; gap:8px;">
+        <button class="submit-btn" id="auth-primary-btn" style="width:100%; font-size:0.75rem; padding:8px;" onclick="handleAuthSubmit()">로그인</button>
+        
+        <div style="text-align:center; margin-top:4px;">
+          <a href="javascript:void(0)" id="auth-toggle-link" style="font-size:0.68rem; color:var(--accent-pink); text-decoration:none; font-weight:700;" onclick="toggleAuthMode()">아직 회원이 아니신가요? 회원가입</a>
+        </div>
       </div>
     </div>
   </div>

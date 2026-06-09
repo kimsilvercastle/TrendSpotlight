@@ -1,7 +1,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const { GoogleGenAI } = require('@google/generative-ai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Simple helper to load environment variables from env.txt or .env file
 function loadEnv() {
@@ -57,7 +57,7 @@ const server = http.createServer(async (req, res) => {
         const { message } = JSON.parse(body);
         const apiKey = process.env.GEMINI_API_KEY;
 
-        if (!apiKey || apiKey === "YOUR_ACTUAL_API_KEY_HERE") {
+        if (!apiKey || apiKey === "YOUR_ACTUAL_API_KEY_HERE" || apiKey.includes("여기에")) {
           res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
           res.end(JSON.stringify({ 
             error: "Gemini API Key가 설정되지 않았습니다. 프로젝트 루트 폴더의 .env 파일에 실제 API 키를 입력해 주세요." 
@@ -66,15 +66,13 @@ const server = http.createServer(async (req, res) => {
         }
 
         // Initialize Google Gen AI
-        const ai = new GoogleGenAI({ apiKey });
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
         
         // Generate content using gemini-1.5-flash
-        const response = await ai.models.generateContent({
-          model: 'gemini-1.5-flash',
-          contents: message,
-        });
-
-        const reply = response.text || "답변을 받아올 수 없습니다.";
+        const result = await model.generateContent(message);
+        const response = await result.response;
+        const reply = response.text() || "답변을 받아올 수 없습니다.";
 
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ reply }));
@@ -83,6 +81,81 @@ const server = http.createServer(async (req, res) => {
         console.error("Gemini API Error:", err);
         res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
         res.end(JSON.stringify({ error: "Gemini API 처리 중 오류 발생: " + err.message }));
+      }
+    });
+    return;
+  }
+
+  // Handle API route for Signup
+  if (req.url === '/api/signup' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const { email, password } = JSON.parse(body);
+        if (!email || !password) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ error: '이메일과 비밀번호를 모두 입력해 주세요.' }));
+          return;
+        }
+
+        const usersFile = path.resolve(process.cwd(), 'users.json');
+        let users = [];
+        if (fs.existsSync(usersFile)) {
+          users = JSON.parse(fs.readFileSync(usersFile, 'utf8') || '[]');
+        }
+
+        const exists = users.some(u => u.email === email);
+        if (exists) {
+          res.writeHead(409, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ error: '이미 가입된 이메일 주소입니다.' }));
+          return;
+        }
+
+        users.push({ email, password, nickname: email.split('@')[0] });
+        fs.writeFileSync(usersFile, JSON.stringify(users, null, 2), 'utf8');
+
+        res.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ message: '회원가입이 완료되었습니다! 로그인해 주세요.', nickname: email.split('@')[0] }));
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ error: '서버 내부 오류: ' + e.message }));
+      }
+    });
+    return;
+  }
+
+  // Handle API route for Login
+  if (req.url === '/api/login' && req.method === 'POST') {
+    let body = '';
+    req.on('data', chunk => { body += chunk.toString(); });
+    req.on('end', () => {
+      try {
+        const { email, password } = JSON.parse(body);
+        if (!email || !password) {
+          res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ error: '이메일과 비밀번호를 모두 입력해 주세요.' }));
+          return;
+        }
+
+        const usersFile = path.resolve(process.cwd(), 'users.json');
+        let users = [];
+        if (fs.existsSync(usersFile)) {
+          users = JSON.parse(fs.readFileSync(usersFile, 'utf8') || '[]');
+        }
+
+        const user = users.find(u => u.email === email && u.password === password);
+        if (!user) {
+          res.writeHead(401, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ error: '이메일 또는 비밀번호가 일치하지 않습니다.' }));
+          return;
+        }
+
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ message: '로그인에 성공했습니다!', email: user.email, nickname: user.nickname }));
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ error: '서버 내부 오류: ' + e.message }));
       }
     });
     return;
