@@ -1678,7 +1678,7 @@ function renderPyramid() {
 
   const scoreBadge = document.getElementById("profile-sensitivity-badge");
   if (scoreBadge) {
-    scoreBadge.innerHTML = `유행 지표 민감도: <strong style="color:#00f2fe">${percentage}</strong> (${rankName})`;
+    scoreBadge.innerHTML = `유행 지표 민감도: <strong style="color:#00f2fe">${percentage}</strong>`;
   }
 }
 
@@ -2344,6 +2344,12 @@ async function startCameraSimulator() {
     
     player.play().catch(e => console.warn("Video play error:", e));
 
+    const slider = document.getElementById("camera-zoom-slider");
+    if (slider) {
+      slider.value = 1.0;
+      adjustCameraZoom(1.0);
+    }
+
     // Initialize swipe gesture listener once
     if (!container.dataset.swipeInitialized) {
       setupCameraSwipeGestures(container);
@@ -2358,6 +2364,32 @@ function toggleCameraFacing() {
   currentFacingMode = (currentFacingMode === "user") ? "environment" : "user";
   showToast(currentFacingMode === "user" ? "전면 카메라로 전환합니다 🤳" : "후면 카메라로 전환합니다 📸");
   startCameraSimulator();
+}
+
+function adjustCameraZoom(val) {
+  const label = document.getElementById("camera-zoom-val");
+  if (label) {
+    label.textContent = `${parseFloat(val).toFixed(1)}x`;
+  }
+  
+  if (currentCameraStream) {
+    const videoTrack = currentCameraStream.getVideoTracks()[0];
+    const capabilities = videoTrack.getCapabilities?.() || {};
+    if (capabilities.zoom) {
+      const min = capabilities.zoom.min || 1;
+      const max = capabilities.zoom.max || 3;
+      // Map 0.5..2.0 range to track's zoom range
+      const targetZoom = min + (parseFloat(val) - 0.5) * (max - min) / 1.5;
+      videoTrack.applyConstraints({
+        advanced: [{ zoom: targetZoom }]
+      }).catch(e => console.warn("Hardware zoom error:", e));
+    }
+  }
+
+  const player = document.getElementById("live-video-player");
+  if (player) {
+    player.style.transform = `scaleX(-1) scale(${val})`;
+  }
 }
 
 let creationMode = "photo"; // "photo" or "video"
@@ -2847,10 +2879,30 @@ function capturePhoto() {
     canvas.height = video.videoHeight || 480;
     const ctx = canvas.getContext("2d");
     
+    const zoomScale = parseFloat(document.getElementById("camera-zoom-slider")?.value || "1");
+    const vw = video.videoWidth || 640;
+    const vh = video.videoHeight || 480;
+    let sw, sh, sx, sy;
+    
     // Mirror photo horizontally (selfie camera style)
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    if (zoomScale >= 1) {
+      sw = vw / zoomScale;
+      sh = vh / zoomScale;
+      sx = (vw - sw) / 2;
+      sy = (vh - sh) / 2;
+      ctx.drawImage(video, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+    } else {
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      sw = canvas.width * zoomScale;
+      sh = canvas.height * zoomScale;
+      sx = (canvas.width - sw) / 2;
+      sy = (canvas.height - sh) / 2;
+      ctx.drawImage(video, 0, 0, vw, vh, sx, sy, sw, sh);
+    }
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     
     dataUrl = canvas.toDataURL("image/png");
@@ -3035,7 +3087,7 @@ function viewDraft(id) {
   if (!isVideo) {
     mediaHtml = `<img src="${mediaUrl}" style="max-width:100%; max-height:70vh; border-radius:16px; border:2px solid rgba(255,255,255,0.2); object-fit:contain; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">`;
   } else {
-    mediaHtml = `<video src="${mediaUrl}" controls autoplay loop style="max-width:100%; max-height:70vh; border-radius:16px; border:2px solid rgba(255,255,255,0.2); object-fit:contain; box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></video>`;
+    mediaHtml = `<video src="${mediaUrl}" controls autoplay loop style="max-width:100%; max-height:70vh; border-radius:16px; border:2px solid rgba(255,255,255,0.2); object-fit:contain; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: scaleX(-1);"></video>`;
   }
 
   modal.innerHTML = `
